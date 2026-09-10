@@ -2,3 +2,5 @@
 .git/**
 wrangler.toml
 .assetsignore
+fotos-candidatos
+fotos-candidatos/**
