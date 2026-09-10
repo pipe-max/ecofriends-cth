@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin — Ecofriends</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#eef8f0;
+    --surface:#ffffff;
+    --surface-2:#eaf4e6;
+    --ink:#173a24;
+    --ink-soft:#4d6b56;
+    --line:#dbeada;
+    --leaf:#2f9e58;
+    --leaf-deep:#1f7a41;
+    --leaf-light:#5bc17e;
+    --leaf-soft:#dcf3e2;
+    --sun:#ffc93c;
+    --danger:#d64545;
+    --danger-soft:#fde8e8;
+
+    --grad-leaf: linear-gradient(135deg, var(--leaf-deep), var(--leaf-light));
+    --shadow: 0 10px 30px rgba(23,58,36,.10);
+    --sticker: 5px 5px 0 0 var(--ink);
+    --sticker-sm: 3px 3px 0 0 var(--ink);
+    --radius-lg: 24px;
+    --radius-md: 16px;
+    --bounce: cubic-bezier(.34,1.56,.64,1);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{background:var(--bg);color:var(--ink);font-family:'Nunito',system-ui,sans-serif;min-height:100vh;}
+  h1,h2,h3{font-family:'Baloo 2','Nunito',system-ui,sans-serif;margin:0;}
+  a{color:var(--leaf-deep);}
+  .wrap{max-width:900px;margin:0 auto;padding:28px 18px 60px;}
+
+  header.top{display:flex;align-items:center;gap:12px;margin-bottom:22px;}
+  header.top img{width:52px;height:52px;object-fit:contain;}
+  header.top h1{font-size:1.3rem;color:var(--leaf-deep);}
+  header.top p{margin:2px 0 0;font-size:.82rem;color:var(--ink-soft);font-weight:700;}
+
+  .card{
+    background:var(--surface);border:2.5px solid var(--ink);border-radius:var(--radius-lg);
+    padding:24px;box-shadow:var(--sticker);margin-bottom:20px;
+  }
+  .card h2{font-size:1.2rem;margin-bottom:6px;}
+  .card p.hint{color:var(--ink-soft);font-weight:600;margin:0 0 18px;font-size:.92rem;}
+
+  .activation input{
+    width:100%;box-sizing:border-box;padding:13px 14px;border:2px solid var(--line);border-radius:12px;
+    font-size:1rem;font-family:inherit;text-align:center;letter-spacing:.03em;margin-bottom:12px;
+  }
+  .activation input:focus{outline:none;border-color:var(--leaf);}
+  .btn{
+    padding:12px 22px;border-radius:999px;font-weight:800;font-family:'Baloo 2';font-size:.95rem;
+    cursor:pointer;border:2.5px solid var(--ink);background:var(--grad-leaf);color:#fff;
+    box-shadow:var(--sticker-sm);transition:.16s var(--bounce);width:100%;
+  }
+  .btn:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 0 var(--ink);}
+  .btn:disabled{opacity:.6;cursor:default;transform:none;box-shadow:var(--sticker-sm);}
+  .error-msg{color:var(--danger);font-weight:700;font-size:.88rem;margin:0 0 12px;min-height:1.2em;}
+
+  .section-title{font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--leaf-deep);margin:22px 0 10px;}
+  .section-title:first-child{margin-top:0;}
+  .grupos-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+  .grupo-row{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    border:2px solid var(--line);border-radius:var(--radius-md);padding:10px 14px;background:var(--surface-2);
+    transition:.15s ease;
+  }
+  .grupo-row.open{border-color:var(--leaf);background:var(--leaf-soft);}
+  .grupo-row .name{font-weight:800;font-family:'Baloo 2';font-size:.98rem;}
+  .grupo-row .state{font-size:.72rem;font-weight:700;color:var(--ink-soft);}
+  .grupo-row.open .state{color:var(--leaf-deep);}
+
+  .switch{position:relative;width:48px;height:28px;flex:none;}
+  .switch input{opacity:0;width:0;height:0;position:absolute;}
+  .switch .track{
+    position:absolute;inset:0;background:#c9c9c9;border-radius:999px;cursor:pointer;transition:.2s ease;
+    border:2px solid var(--ink);
+  }
+  .switch .track::before{
+    content:"";position:absolute;width:18px;height:18px;left:2px;top:2px;background:#fff;border-radius:50%;
+    transition:.2s var(--bounce);box-shadow:0 1px 3px rgba(0,0,0,.3);
+  }
+  .switch input:checked + .track{background:var(--leaf);}
+  .switch input:checked + .track::before{transform:translateX(20px);}
+  .switch input:disabled + .track{opacity:.5;cursor:default;}
+
+  .loading, .empty-state{text-align:center;padding:30px;color:var(--ink-soft);font-weight:700;}
+  .toast{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    background:var(--ink);color:#fff;padding:10px 20px;border-radius:999px;font-weight:700;font-size:.85rem;
+    box-shadow:0 8px 20px rgba(0,0,0,.3);z-index:80;opacity:0;pointer-events:none;transition:opacity .25s ease;
+  }
+  .toast.show{opacity:1;}
+  .toast.error{background:var(--danger);}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header class="top">
+    <img src="theo.png" alt="Ecofriends" />
+    <div>
+      <h1>Panel de administración</h1>
+      <p>Habilitar votación por salón · Ecofriends 2026–2027</p>
+    </div>
+  </header>
+
+  <div id="app"><div class="loading">Cargando…</div></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  var SUPABASE_URL = "https://qnikgvtjjzxsjcbquazd.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_yvPIKT1llfRA5XmOy9CYQQ_E_ZeH0Sk";
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var CODE_KEY = "ecofriends_admin_code";
+
+  var SECTIONS = ["Preescolar", "Primaria", "Bachillerato"];
+  var app = document.getElementById("app");
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+
+  function showToast(msg, isError){
+    var t = document.getElementById("toast");
+    t.textContent = msg;
+    t.className = "toast show" + (isError ? " error" : "");
+    setTimeout(function(){ t.className = "toast"; }, 2200);
+  }
+
+  function init(){
+    var code = localStorage.getItem(CODE_KEY);
+    if(!code){ renderActivation(); return; }
+    sb.rpc('ecofriends_verify_admin', { p_code: code }).then(function(res){
+      if(res.error || !res.data){
+        localStorage.removeItem(CODE_KEY);
+        renderActivation('Código incorrecto o vencido. Intenta de nuevo.');
+        return;
+      }
+      renderPanel(code);
+    });
+  }
+
+  function renderActivation(error){
+    app.innerHTML =
+      '<div class="card activation">' +
+        '<h2>🔐 Código de administrador</h2>' +
+        '<p class="hint">Ingresa el código para habilitar o cerrar la votación de cada salón.</p>' +
+        '<input id="code-input" type="password" autocomplete="off" placeholder="Código" />' +
+        '<div class="error-msg">' + (error ? esc(error) : '') + '</div>' +
+        '<button class="btn" id="enter-btn">Entrar</button>' +
+      '</div>';
+    var input = document.getElementById('code-input');
+    var btn = document.getElementById('enter-btn');
+    function tryEnter(){
+      var code = input.value.trim();
+      if(!code) return;
+      btn.disabled = true; btn.textContent = 'Verificando…';
+      sb.rpc('ecofriends_verify_admin', { p_code: code }).then(function(res){
+        btn.disabled = false; btn.textContent = 'Entrar';
+        if(res.error || !res.data){
+          document.querySelector('.error-msg').textContent = 'Código incorrecto.';
+          return;
+        }
+        localStorage.setItem(CODE_KEY, code);
+        renderPanel(code);
+      });
+    }
+    btn.addEventListener('click', tryEnter);
+    input.addEventListener('keydown', function(e){ if(e.key === 'Enter') tryEnter(); });
+    input.focus();
+  }
+
+  function renderPanel(code){
+    app.innerHTML = '<div class="card"><div class="loading">Cargando salones…</div></div>';
+    sb.from('ecofriends_grupos').select('*').order('orden').then(function(res){
+      if(res.error){
+        app.innerHTML = '<div class="card"><div class="empty-state">No se pudieron cargar los salones: ' + esc(res.error.message) + '</div></div>';
+        return;
+      }
+      var bySection = {};
+      res.data.forEach(function(g){
+        bySection[g.seccion] = bySection[g.seccion] || [];
+        bySection[g.seccion].push(g);
+      });
+
+      var html = '<div class="card"><p class="hint" style="margin-bottom:0;">' +
+        'Solo los salones marcados como abiertos pueden entrar a votar. Habilita uno a la vez a medida que el salón llega, y ciérralo de nuevo cuando termine.' +
+        '</p></div><div class="card">';
+
+      SECTIONS.forEach(function(sec){
+        var grupos = bySection[sec];
+        if(!grupos || !grupos.length) return;
+        html += '<div class="section-title">' + esc(sec) + '</div><div class="grupos-grid">';
+        grupos.forEach(function(g){
+          html += '<label class="grupo-row' + (g.voting_open ? ' open' : '') + '" data-grupo="' + esc(g.grupo) + '">' +
+            '<span><span class="name">' + esc(g.grupo) + '</span><br><span class="state">' + (g.voting_open ? 'Abierto' : 'Cerrado') + '</span></span>' +
+            '<span class="switch"><input type="checkbox"' + (g.voting_open ? ' checked' : '') + ' /><span class="track"></span></span>' +
+            '</label>';
+        });
+        html += '</div>';
+      });
+      html += '<div style="margin-top:20px;"><a href="#" id="logout-link" style="font-size:.82rem;font-weight:700;">Cerrar sesión de administrador</a></div>';
+      html += '</div>';
+      app.innerHTML = html;
+
+      app.querySelectorAll('.grupo-row').forEach(function(row){
+        var checkbox = row.querySelector('input');
+        checkbox.addEventListener('change', function(){
+          var grupo = row.getAttribute('data-grupo');
+          var open = checkbox.checked;
+          checkbox.disabled = true;
+          sb.rpc('ecofriends_set_voting', { p_grupo: grupo, p_open: open, p_code: code }).then(function(res){
+            checkbox.disabled = false;
+            if(res.error || !res.data){
+              checkbox.checked = !open;
+              showToast('No se pudo actualizar ' + grupo, true);
+              return;
+            }
+            row.classList.toggle('open', open);
+            row.querySelector('.state').textContent = open ? 'Abierto' : 'Cerrado';
+            showToast(grupo + (open ? ' habilitado ✓' : ' cerrado'));
+          });
+        });
+      });
+
+      document.getElementById('logout-link').addEventListener('click', function(e){
+        e.preventDefault();
+        localStorage.removeItem(CODE_KEY);
+        renderActivation();
+      });
+    });
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>

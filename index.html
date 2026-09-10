@@ -122,6 +122,9 @@
   .group-card .c{display:block;margin-top:4px;color:var(--ink-soft);font-size:.78rem;font-weight:700;}
   .group-card.done{cursor:default;opacity:.85;}
   .group-card.done:hover{transform:none;box-shadow:var(--sticker-sm);background:var(--surface);}
+  .group-card.locked{cursor:not-allowed;opacity:.55;}
+  .group-card.locked:hover{transform:none;box-shadow:var(--sticker-sm);background:var(--surface);}
+  .group-card.locked .c{color:var(--danger);}
   .group-card.voted{background:var(--leaf-soft);}
   .group-card.voted::after{
     content:"✓ Ya votaste";position:absolute;top:-9px;right:10px;font-size:.62rem;font-weight:800;
@@ -264,7 +267,7 @@
   <div class="loading">Cargando…</div>
 </main>
 
-<footer>Cada dispositivo puede votar una sola vez por grupo · Colegio Theodoro Hertzl</footer>
+<footer>Cada dispositivo puede votar una sola vez por grupo · Colegio Theodoro Hertzl · <a href="admin.html">Admin</a></footer>
 
 <script>
 (function(){
@@ -290,7 +293,7 @@
   };
 
   var app = document.getElementById("app");
-  var state = { view:"home", section:null, group:null, candidates:[], loaded:false, pendingVote:null };
+  var state = { view:"home", section:null, group:null, candidates:[], loaded:false, pendingVote:null, gruposAbiertos:{} };
 
   function esc(s){
     return String(s).replace(/[&<>"']/g, function(c){
@@ -337,6 +340,9 @@
         if(DECIDED[g]){
           html += '<div class="group-card done"><span class="g">' + esc(g) + '</span>' +
             '<span class="c">Ya decidido 🎉</span></div>';
+        } else if(!state.gruposAbiertos[g]){
+          html += '<div class="group-card locked"><span class="g">' + esc(g) + '</span>' +
+            '<span class="c">🔒 Aún no abre</span></div>';
         } else {
           var already = votedFor(g);
           var count = state.allCandidates.filter(function(c){ return c.grupo === g; }).length;
@@ -434,6 +440,11 @@
           markVoted(group, votedFor(group) || nombre);
           state.view = 'ballot';
           render();
+        } else if(res.error.code === 'P0001'){
+          state.gruposAbiertos[group] = false;
+          state.view = 'home';
+          render();
+          app.insertAdjacentHTML('afterbegin', '<div class="banner error">La votación de ' + esc(group) + ' todavía no está habilitada.</div>');
         } else {
           app.insertAdjacentHTML('afterbegin', '<div class="banner error">No se pudo registrar el voto. Intenta de nuevo. (' + esc(res.error.message||'') + ')</div>');
         }
@@ -495,12 +506,20 @@
   document.getElementById('nav-vote').addEventListener('click', function(){ state.view='home'; render(); });
   document.getElementById('nav-results').addEventListener('click', function(){ state.view='results'; render(); });
 
-  sb.from('ecofriends_candidatos').select('*').order('orden').then(function(res){
-    if(res.error){
-      app.innerHTML = '<div class="banner error">No se pudo conectar con la base de datos: ' + esc(res.error.message) + '</div>';
+  Promise.all([
+    sb.from('ecofriends_candidatos').select('*').order('orden'),
+    sb.from('ecofriends_grupos').select('grupo, voting_open')
+  ]).then(function(results){
+    var candRes = results[0], gruposRes = results[1];
+    if(candRes.error){
+      app.innerHTML = '<div class="banner error">No se pudo conectar con la base de datos: ' + esc(candRes.error.message) + '</div>';
       return;
     }
-    state.allCandidates = res.data;
+    state.allCandidates = candRes.data;
+    state.gruposAbiertos = {};
+    if(!gruposRes.error){
+      gruposRes.data.forEach(function(g){ state.gruposAbiertos[g.grupo] = !!g.voting_open; });
+    }
     state.loaded = true;
     render();
   });
