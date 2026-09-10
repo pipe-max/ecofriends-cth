@@ -48,6 +48,10 @@
     --tab-hover-pre:#fff3c4;
     --tab-hover-bac:#e1f3ff;
     --candidate-hover:#fff3c4;
+
+    --tint-pre:#fff3d6; --tint-pre-line:#f5d788;
+    --tint-pri:#dbeafe; --tint-pri-line:#a8cdf5;
+    --tint-bac:#fbdfe1; --tint-bac-line:#f2b3b8;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark){
@@ -73,6 +77,10 @@
       --tab-hover-pre:#3a2f10;
       --tab-hover-bac:#12283a;
       --candidate-hover:#3a2f10;
+
+      --tint-pre:#2c2410; --tint-pre-line:#5c4a1a;
+      --tint-pri:#12283a; --tint-pri-line:#1f4060;
+      --tint-bac:#331821; --tint-bac-line:#5c2635;
       color-scheme: dark;
     }
   }
@@ -98,6 +106,10 @@
     --tab-hover-pre:#3a2f10;
     --tab-hover-bac:#12283a;
     --candidate-hover:#3a2f10;
+
+    --tint-pre:#2c2410; --tint-pre-line:#5c4a1a;
+    --tint-pri:#12283a; --tint-pri-line:#1f4060;
+    --tint-bac:#331821; --tint-bac-line:#5c2635;
     color-scheme: dark;
   }
   *{box-sizing:border-box;}
@@ -174,24 +186,15 @@
   .breadcrumbs button:hover{text-decoration:underline;}
   .breadcrumbs .sep{opacity:.5;}
 
-  /* ---------- Section tabs ---------- */
-  .section-tabs{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px;}
-  .tab{
-    flex:1 1 160px;border:2.5px solid var(--ink);background:var(--surface);border-radius:var(--radius-md);
-    padding:18px 16px;cursor:pointer;text-align:left;font-family:inherit;transition:.16s var(--bounce);
-    box-shadow:var(--sticker-sm);position:relative;overflow:hidden;
+  /* ---------- Section blocks ---------- */
+  .section-block{
+    margin-bottom:22px;padding:22px 20px 24px;border-radius:var(--radius-lg);
+    background:var(--tint-bg,var(--bg));border:2px solid var(--tint-line,var(--line));
   }
-  .tab::before{content:"";position:absolute;left:-2.5px;top:-2.5px;right:-2.5px;height:6px;background:var(--bar-color,var(--leaf));border-radius:var(--radius-md) var(--radius-md) 0 0;}
-  .tab:hover{transform:translate(-2px,-2px);box-shadow:var(--sticker-hover);}
-  .tab:active{transform:translate(1px,1px);box-shadow:2px 2px 0 0 var(--ink);}
-  .tab .n{font-family:'Baloo 2';font-weight:700;font-size:1.1rem;color:var(--ink);}
-  .tab .s{display:block;color:var(--ink-soft);font-size:.82rem;font-weight:700;margin-top:2px;}
-  .tab.pre{--bar-color:var(--sun);}
-  .tab.pre:hover{background:var(--tab-hover-pre);}
-  .tab.pri{--bar-color:var(--leaf);}
-  .tab.pri:hover{background:var(--leaf-soft);}
-  .tab.bac{--bar-color:var(--sky);}
-  .tab.bac:hover{background:var(--tab-hover-bac);}
+  .section-block h2{font-size:1.4rem;margin-bottom:16px;}
+  .section-block.pre{--tint-bg:var(--tint-pre);--tint-line:var(--tint-pre-line);}
+  .section-block.pri{--tint-bg:var(--tint-pri);--tint-line:var(--tint-pri-line);}
+  .section-block.bac{--tint-bg:var(--tint-bac);--tint-line:var(--tint-bac-line);}
 
   /* ---------- Groups grid ---------- */
   .groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
@@ -211,6 +214,8 @@
     content:"✓ Ya votaste";position:absolute;top:-9px;right:10px;font-size:.62rem;font-weight:800;
     color:#fff;background:var(--leaf-deep);padding:3px 9px;border-radius:999px;border:1.5px solid var(--ink);
   }
+  .section-block.pre .group-card:hover{background:var(--tab-hover-pre);}
+  .section-block.bac .group-card:hover{background:var(--tab-hover-bac);}
 
   .decided-card{
     border:2.5px dashed var(--sun-deep);background:var(--surface-2);border-radius:var(--radius-md);
@@ -364,9 +369,9 @@
     "9° Alef","9° Bet","10° Alef","10° Bet","11° Alef","11° Bet","12° Alef","12° Bet"];
 
   var SECTIONS = [
-    {id:"Preescolar", label:"Preescolar", sub:"K3 a K5", cls:"pre"},
-    {id:"Primaria", label:"Primaria", sub:"1° a 6°", cls:"pri"},
-    {id:"Bachillerato", label:"Bachillerato", sub:"7° a 12°", cls:"bac"}
+    {id:"Preescolar", label:"Preescolar", cls:"pre"},
+    {id:"Primaria", label:"Primaria", cls:"pri"},
+    {id:"Bachillerato", label:"Bachillerato", cls:"bac"}
   ];
 
   var DECIDED = {
@@ -407,50 +412,33 @@
 
   function render(){
     if(state.view === "home") return renderHome();
-    if(state.view === "groups") return renderGroups();
     if(state.view === "ballot") return renderBallot();
     if(state.view === "results") return renderResults();
   }
 
   function renderHome(){
-    var html = '<div class="section-tabs">';
+    var html = '';
     SECTIONS.forEach(function(s){
-      html += '<button class="tab ' + s.cls + '" data-section="' + s.id + '">' +
-        '<span class="n">' + s.label + '</span><span class="s">' + s.sub + '</span></button>';
-    });
-    html += '</div>';
-    app.innerHTML = html;
-    app.querySelectorAll('[data-section]').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        state.section = btn.getAttribute('data-section');
-        state.view = 'groups';
-        render();
+      var groups = groupsInSection(s.id);
+      if(!groups.length) return;
+      html += '<div class="section-block ' + s.cls + '"><h2>' + esc(s.label) + '</h2><div class="groups-grid">';
+      groups.forEach(function(g){
+        if(DECIDED[g]){
+          html += '<div class="group-card done"><span class="g">' + esc(g) + '</span>' +
+            '<span class="c">Ya decidido 🎉</span></div>';
+        } else {
+          var already = votedFor(g);
+          var count = state.allCandidates.filter(function(c){ return c.grupo === g; }).length;
+          html += '<button class="group-card' + (already ? ' voted' : '') + '" data-section="' + s.id + '" data-group="' + esc(g) + '">' +
+            '<span class="g">' + esc(g) + '</span><span class="c">' + count + ' candidatos</span></button>';
+        }
       });
+      html += '</div></div>';
     });
-  }
-
-  function renderGroups(){
-    var section = SECTIONS.find(function(s){ return s.id === state.section; });
-    var html = '<div class="breadcrumbs">' +
-      '<button data-crumb="home">Inicio</button><span class="sep">/</span>' + esc(section.label) + '</div>';
-    html += '<h2 style="margin-bottom:14px;">' + esc(section.label) + '</h2>';
-    html += '<div class="groups-grid">';
-    groupsInSection(section.id).forEach(function(g){
-      if(DECIDED[g]){
-        html += '<div class="group-card done"><span class="g">' + esc(g) + '</span>' +
-          '<span class="c">Ya decidido 🎉</span></div>';
-      } else {
-        var already = votedFor(g);
-        var count = state.allCandidates.filter(function(c){ return c.grupo === g; }).length;
-        html += '<button class="group-card' + (already ? ' voted' : '') + '" data-group="' + esc(g) + '">' +
-          '<span class="g">' + esc(g) + '</span><span class="c">' + count + ' candidatos</span></button>';
-      }
-    });
-    html += '</div>';
     app.innerHTML = html;
-    app.querySelector('[data-crumb="home"]').addEventListener('click', function(){ state.view='home'; render(); });
     app.querySelectorAll('[data-group]').forEach(function(btn){
       btn.addEventListener('click', function(){
+        state.section = btn.getAttribute('data-section');
         state.group = btn.getAttribute('data-group');
         state.view = 'ballot';
         render();
@@ -459,12 +447,10 @@
   }
 
   function renderBallot(){
-    var section = SECTIONS.find(function(s){ return s.id === state.section; });
     var group = state.group;
     var already = votedFor(group);
     var html = '<div class="breadcrumbs">' +
-      '<button data-crumb="home">Inicio</button><span class="sep">/</span>' +
-      '<button data-crumb="groups">' + esc(section.label) + '</button><span class="sep">/</span>' + esc(group) + '</div>';
+      '<button data-crumb="home">Inicio</button><span class="sep">/</span>' + esc(group) + '</div>';
 
     if(already){
       html += '<div class="thanks"><div class="big-check">✓</div>' +
@@ -502,8 +488,6 @@
   function bindCrumbs(){
     var h = app.querySelector('[data-crumb="home"]');
     if(h) h.addEventListener('click', function(){ state.view='home'; render(); });
-    var g = app.querySelector('[data-crumb="groups"]');
-    if(g) g.addEventListener('click', function(){ state.view='groups'; render(); });
   }
 
   function openConfirm(candidatoId, nombre){
