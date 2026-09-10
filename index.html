@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Ecofriends 2026–2027</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+  :root{
+    --bg:#f3f8f1;
+    --surface:#ffffff;
+    --surface-2:#eaf4e6;
+    --ink:#173a24;
+    --ink-soft:#4d6b56;
+    --line:#dbeada;
+    --accent:#ff6a3d;
+    --accent-ink:#7a2a10;
+    --accent-soft:#ffe4d6;
+    --leaf:#2f9e58;
+    --leaf-deep:#1f7a41;
+    --leaf-soft:#dcf3e2;
+    --sun:#ffc93c;
+    --sky:#4fb3e0;
+    --danger:#d64545;
+    --shadow: 0 10px 30px rgba(23,58,36,.10);
+    --radius-lg: 22px;
+    --radius-md: 14px;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e1a13;
+      --surface:#152618;
+      --surface-2:#1c331f;
+      --ink:#eaf3ea;
+      --ink-soft:#a9c4ac;
+      --line:#28402c;
+      --accent:#ff8256;
+      --accent-ink:#ffd9c6;
+      --accent-soft:#3a2419;
+      --leaf:#54c17e;
+      --leaf-deep:#8fe6ac;
+      --leaf-soft:#1c3524;
+      --sun:#ffd76a;
+      --sky:#74c9ee;
+      --danger:#ff8080;
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e1a13;
+    --surface:#152618;
+    --surface-2:#1c331f;
+    --ink:#eaf3ea;
+    --ink-soft:#a9c4ac;
+    --line:#28402c;
+    --accent:#ff8256;
+    --accent-ink:#ffd9c6;
+    --accent-soft:#3a2419;
+    --leaf:#54c17e;
+    --leaf-deep:#8fe6ac;
+    --leaf-soft:#1c3524;
+    --sun:#ffd76a;
+    --sky:#74c9ee;
+    --danger:#ff8080;
+    --shadow: 0 10px 30px rgba(0,0,0,.35);
+    color-scheme: dark;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Nunito',system-ui,sans-serif;
+    min-height:100vh;
+  }
+  h1,h2,h3,.display{
+    font-family:'Baloo 2','Nunito',system-ui,sans-serif;
+    text-wrap:balance;
+    margin:0;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:20px 18px 64px;}
+  header.top{
+    display:flex;align-items:center;gap:14px;padding:22px 18px 10px;max-width:1000px;margin:0 auto;
+  }
+  .mascot{width:52px;height:52px;flex:none;}
+  .brand-text{display:flex;flex-direction:column;gap:2px;}
+  .brand-text .kicker{
+    font-size:.72rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--leaf-deep);
+  }
+  .brand-text h1{font-size:1.35rem;font-weight:700;color:var(--ink);}
+  nav.top-actions{margin-left:auto;display:flex;gap:8px;}
+  .pill-btn{
+    font-family:'Nunito',sans-serif;font-weight:800;font-size:.82rem;
+    background:var(--surface);color:var(--ink-soft);border:1px solid var(--line);
+    padding:8px 14px;border-radius:999px;cursor:pointer;transition:.15s;
+  }
+  .pill-btn:hover{border-color:var(--leaf);color:var(--leaf-deep);transform:translateY(-1px);}
+  .pill-btn.active{background:var(--leaf);border-color:var(--leaf);color:#fff;}
+
+  .hero{
+    background:linear-gradient(160deg, var(--leaf-soft), var(--surface) 65%);
+    border:1px solid var(--line);
+    border-radius:var(--radius-lg);
+    padding:28px 26px;
+    display:flex;align-items:center;gap:22px;flex-wrap:wrap;
+    box-shadow:var(--shadow);
+    margin-bottom:26px;
+  }
+  .hero-text h2{font-size:clamp(1.4rem,3vw,1.9rem);color:var(--ink);}
+  .hero-text p{margin:8px 0 0;color:var(--ink-soft);font-size:1rem;max-width:52ch;}
+  .hero-blob{width:96px;height:96px;flex:none;}
+
+  .breadcrumbs{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:18px;font-weight:700;font-size:.85rem;color:var(--ink-soft);}
+  .breadcrumbs button{
+    background:none;border:none;color:var(--leaf-deep);font-weight:800;cursor:pointer;font-size:.85rem;padding:4px 2px;font-family:inherit;
+  }
+  .breadcrumbs button:hover{text-decoration:underline;}
+  .breadcrumbs .sep{opacity:.5;}
+
+  .section-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px;}
+  .tab{
+    flex:1 1 160px;
+    border:1px solid var(--line);background:var(--surface);border-radius:var(--radius-md);
+    padding:16px;cursor:pointer;text-align:left;font-family:inherit;transition:.15s;
+    box-shadow:var(--shadow);
+  }
+  .tab:hover{transform:translateY(-2px);}
+  .tab .n{font-family:'Baloo 2';font-weight:700;font-size:1.08rem;color:var(--ink);}
+  .tab .s{display:block;color:var(--ink-soft);font-size:.82rem;font-weight:600;margin-top:2px;}
+  .tab.pre{border-top:4px solid var(--sun);}
+  .tab.pri{border-top:4px solid var(--leaf);}
+  .tab.bac{border-top:4px solid var(--sky);}
+
+  .groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
+  .group-card{
+    border:1px solid var(--line);background:var(--surface);border-radius:var(--radius-md);
+    padding:16px 14px;cursor:pointer;font-family:inherit;text-align:left;transition:.15s;box-shadow:var(--shadow);
+    position:relative;
+  }
+  .group-card:hover{transform:translateY(-2px);border-color:var(--leaf);}
+  .group-card .g{font-family:'Baloo 2';font-weight:700;font-size:1.05rem;}
+  .group-card .c{display:block;margin-top:4px;color:var(--ink-soft);font-size:.78rem;font-weight:700;}
+  .group-card.done{cursor:default;opacity:.85;}
+  .group-card.done:hover{transform:none;border-color:var(--line);}
+  .group-card.voted::after{
+    content:"✓ Ya votaste";position:absolute;top:10px;right:10px;font-size:.65rem;font-weight:800;
+    color:var(--leaf-deep);background:var(--leaf-soft);padding:3px 8px;border-radius:999px;
+  }
+
+  .decided-card{
+    border:1px dashed var(--sun);background:var(--surface-2);border-radius:var(--radius-md);
+    padding:18px;display:flex;gap:14px;align-items:center;
+  }
+  .decided-card .badge{
+    width:44px;height:44px;border-radius:50%;background:var(--sun);color:#4a3400;display:flex;align-items:center;justify-content:center;
+    font-family:'Baloo 2';font-weight:800;font-size:1.2rem;flex:none;
+  }
+  .decided-card p{margin:0;color:var(--ink-soft);font-weight:700;font-size:.92rem;}
+  .decided-card strong{color:var(--ink);font-size:1.05rem;}
+
+  .ballot-list{display:grid;gap:12px;}
+  .candidate{
+    display:flex;align-items:center;gap:14px;background:var(--surface);border:1px solid var(--line);
+    border-radius:var(--radius-md);padding:14px 16px;box-shadow:var(--shadow);
+  }
+  .avatar{
+    width:56px;height:56px;border-radius:50%;flex:none;object-fit:cover;
+    background:linear-gradient(135deg,var(--leaf),var(--sky));
+    display:flex;align-items:center;justify-content:center;color:#fff;font-family:'Baloo 2';font-weight:700;font-size:1.2rem;
+  }
+  .cand-name{font-weight:800;font-size:1.02rem;flex:1;}
+  .vote-btn{
+    font-family:'Nunito';font-weight:800;font-size:.88rem;background:var(--accent);color:#fff;border:none;
+    padding:10px 18px;border-radius:999px;cursor:pointer;transition:.15s;white-space:nowrap;
+  }
+  .vote-btn:hover{filter:brightness(1.05);transform:translateY(-1px);}
+  .vote-btn:disabled{opacity:.5;cursor:default;transform:none;}
+
+  .confirm-overlay{
+    position:fixed;inset:0;background:rgba(10,20,12,.55);display:flex;align-items:center;justify-content:center;
+    padding:20px;z-index:50;
+  }
+  .confirm-box{
+    background:var(--surface);border-radius:var(--radius-lg);padding:26px;max-width:380px;width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,.35);text-align:center;
+  }
+  .confirm-box .avatar{margin:0 auto 12px;width:72px;height:72px;font-size:1.5rem;}
+  .confirm-box h3{font-size:1.2rem;margin-bottom:4px;}
+  .confirm-box p{color:var(--ink-soft);margin:0 0 20px;font-weight:600;}
+  .confirm-actions{display:flex;gap:10px;}
+  .confirm-actions button{flex:1;padding:12px;border-radius:12px;font-weight:800;font-family:inherit;cursor:pointer;border:none;font-size:.92rem;}
+  .btn-cancel{background:var(--surface-2);color:var(--ink);}
+  .btn-confirm{background:var(--leaf);color:#fff;}
+
+  .thanks{
+    text-align:center;padding:50px 20px;background:var(--surface);border-radius:var(--radius-lg);
+    border:1px solid var(--line);box-shadow:var(--shadow);
+  }
+  .thanks .big-check{
+    width:76px;height:76px;border-radius:50%;background:var(--leaf-soft);color:var(--leaf-deep);
+    display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:2.2rem;
+  }
+  .thanks h2{margin-bottom:6px;}
+  .thanks p{color:var(--ink-soft);font-weight:600;}
+
+  .banner{
+    display:flex;gap:10px;align-items:center;padding:12px 16px;border-radius:var(--radius-md);
+    font-weight:700;font-size:.88rem;margin-bottom:16px;
+  }
+  .banner.error{background:#fde8e8;color:var(--danger);}
+  :root[data-theme="dark"] .banner.error, @media (prefers-color-scheme:dark){ .banner.error{background:#3a1a1a;} }
+
+  .results-table{width:100%;border-collapse:collapse;font-size:.92rem;}
+  .results-group{
+    background:var(--surface);border:1px solid var(--line);border-radius:var(--radius-md);
+    padding:16px 18px;margin-bottom:14px;box-shadow:var(--shadow);
+  }
+  .results-group h3{font-size:1.02rem;margin-bottom:10px;display:flex;justify-content:space-between;align-items:baseline;}
+  .results-group h3 .total{font-size:.78rem;color:var(--ink-soft);font-weight:700;font-variant-numeric:tabular-nums;}
+  .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;}
+  .bar-row .name{width:190px;flex:none;font-weight:700;font-size:.85rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+  .bar-track{flex:1;background:var(--surface-2);border-radius:999px;height:16px;overflow:hidden;}
+  .bar-fill{height:100%;background:linear-gradient(90deg,var(--leaf),var(--sky));border-radius:999px;transition:width .4s ease;}
+  .bar-row .count{width:34px;flex:none;text-align:right;font-weight:800;font-variant-numeric:tabular-nums;font-size:.85rem;}
+  .bar-row.winner .name{color:var(--leaf-deep);}
+  .bar-row.winner .bar-fill{background:linear-gradient(90deg,var(--accent),var(--sun));}
+
+  .empty-state{text-align:center;padding:40px 20px;color:var(--ink-soft);font-weight:700;}
+  .loading{text-align:center;padding:40px;color:var(--ink-soft);font-weight:700;}
+  footer{text-align:center;color:var(--ink-soft);font-size:.78rem;padding:20px;font-weight:700;}
+
+  @media (prefers-reduced-motion:reduce){
+    *{transition:none !important;animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <svg class="mascot" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <circle cx="32" cy="30" r="24" fill="var(--accent)"/>
+    <circle cx="24" cy="26" r="3.2" fill="#1b1b1b"/>
+    <circle cx="40" cy="26" r="3.2" fill="#1b1b1b"/>
+    <path d="M22 36c4 4 16 4 20 0" stroke="#1b1b1b" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+    <path d="M32 6c-6 4-6 10 0 14" stroke="var(--leaf)" stroke-width="4" stroke-linecap="round"/>
+  </svg>
+  <div class="brand-text">
+    <span class="kicker">Ecofriends · Theodoro Hertzl</span>
+    <h1>Elección de Ecofriends 2026–2027</h1>
+  </div>
+  <nav class="top-actions">
+    <button class="pill-btn" id="nav-vote">Votar</button>
+    <button class="pill-btn" id="nav-results">Resultados</button>
+  </nav>
+</header>
+
+<main class="wrap" id="app">
+  <div class="loading">Cargando…</div>
+</main>
+
+<footer>Cada dispositivo puede votar una sola vez por grupo · Colegio Theodoro Hertzl</footer>
+
+<script>
+(function(){
+  "use strict";
+
+  var SUPABASE_URL = "https://qnikgvtjjzxsjcbquazd.supabase.co";
+  var SUPABASE_KEY = "sb_publishable_yvPIKT1llfRA5XmOy9CYQQ_E_ZeH0Sk";
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  var GROUP_ORDER = ["K3 Alef","K3 Bet","K4 Alef","K4 Bet","K5 Alef","K5 Bet",
+    "1° Alef","1° Bet","2° Alef","2° Bet","3° Alef","3° Bet","4° Alef","4° Bet",
+    "5° Alef","5° Bet","6° Alef","6° Bet","7° Alef","7° Bet","8° Alef","8° Bet",
+    "9° Alef","9° Bet","10° Alef","10° Bet","11° Alef","11° Bet","12° Alef","12° Bet"];
+
+  var SECTIONS = [
+    {id:"Preescolar", label:"Preescolar", sub:"K3 a K5", cls:"pre"},
+    {id:"Primaria", label:"Primaria", sub:"1° a 6°", cls:"pri"},
+    {id:"Bachillerato", label:"Bachillerato", sub:"7° a 12°", cls:"bac"}
+  ];
+
+  var DECIDED = {
+    "K5 Bet": "Jacob Goleburn"
+  };
+
+  var app = document.getElementById("app");
+  var state = { view:"home", section:null, group:null, candidates:[], loaded:false, pendingVote:null };
+
+  function esc(s){
+    return String(s).replace(/[&<>"']/g, function(c){
+      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
+    });
+  }
+  function initials(name){
+    var parts = name.trim().split(/\s+/);
+    return ((parts[0]||"")[0]||"") + ((parts[1]||"")[0]||"");
+  }
+  function deviceId(){
+    var k = "ecofriends_device_id";
+    var v = localStorage.getItem(k);
+    if(!v){ v = (crypto.randomUUID ? crypto.randomUUID() : (Date.now()+"-"+Math.random())); localStorage.setItem(k, v); }
+    return v;
+  }
+  function votedFor(group){
+    try{ return localStorage.getItem("ecofriends_voto_" + group); }catch(e){ return null; }
+  }
+  function markVoted(group, name){
+    try{ localStorage.setItem("ecofriends_voto_" + group, name); }catch(e){}
+  }
+
+  function groupsInSection(sectionId){
+    var set = {};
+    state.allCandidates.forEach(function(c){ if(c.seccion === sectionId) set[c.grupo] = true; });
+    if(sectionId === "Preescolar") set["K5 Bet"] = true;
+    return GROUP_ORDER.filter(function(g){ return set[g]; });
+  }
+
+  function render(){
+    if(state.view === "home") return renderHome();
+    if(state.view === "groups") return renderGroups();
+    if(state.view === "ballot") return renderBallot();
+    if(state.view === "results") return renderResults();
+  }
+
+  function renderHero(text, sub){
+    return '<div class="hero">' +
+      '<svg class="hero-blob" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">' +
+      '<circle cx="32" cy="30" r="24" fill="var(--accent)"/>' +
+      '<circle cx="24" cy="26" r="3.2" fill="#1b1b1b"/><circle cx="40" cy="26" r="3.2" fill="#1b1b1b"/>' +
+      '<path d="M22 36c4 4 16 4 20 0" stroke="#1b1b1b" stroke-width="2.4" stroke-linecap="round" fill="none"/>' +
+      '<path d="M32 6c-6 4-6 10 0 14" stroke="var(--leaf)" stroke-width="4" stroke-linecap="round"/>' +
+      '</svg>' +
+      '<div class="hero-text"><h2>' + text + '</h2><p>' + sub + '</p></div></div>';
+  }
+
+  function renderHome(){
+    var html = renderHero("¿Quién debería ser el Ecofriend de tu grupo?",
+      "Elige tu sección, luego tu grupo, y vota por tu candidato favorito. Un voto por dispositivo.");
+    html += '<div class="section-tabs">';
+    SECTIONS.forEach(function(s){
+      html += '<button class="tab ' + s.cls + '" data-section="' + s.id + '">' +
+        '<span class="n">' + s.label + '</span><span class="s">' + s.sub + '</span></button>';
+    });
+    html += '</div>';
+    app.innerHTML = html;
+    app.querySelectorAll('[data-section]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        state.section = btn.getAttribute('data-section');
+        state.view = 'groups';
+        render();
+      });
+    });
+  }
+
+  function renderGroups(){
+    var section = SECTIONS.find(function(s){ return s.id === state.section; });
+    var html = '<div class="breadcrumbs">' +
+      '<button data-crumb="home">Inicio</button><span class="sep">/</span>' + esc(section.label) + '</div>';
+    html += '<h2 style="margin-bottom:14px;">' + esc(section.label) + '</h2>';
+    html += '<div class="groups-grid">';
+    groupsInSection(section.id).forEach(function(g){
+      if(DECIDED[g]){
+        html += '<div class="group-card done"><span class="g">' + esc(g) + '</span>' +
+          '<span class="c">Ya decidido 🎉</span></div>';
+      } else {
+        var already = votedFor(g);
+        var count = state.allCandidates.filter(function(c){ return c.grupo === g; }).length;
+        html += '<button class="group-card' + (already ? ' voted' : '') + '" data-group="' + esc(g) + '">' +
+          '<span class="g">' + esc(g) + '</span><span class="c">' + count + ' candidatos</span></button>';
+      }
+    });
+    html += '</div>';
+    app.innerHTML = html;
+    app.querySelector('[data-crumb="home"]').addEventListener('click', function(){ state.view='home'; render(); });
+    app.querySelectorAll('[data-group]').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        state.group = btn.getAttribute('data-group');
+        state.view = 'ballot';
+        render();
+      });
+    });
+  }
+
+  function renderBallot(){
+    var section = SECTIONS.find(function(s){ return s.id === state.section; });
+    var group = state.group;
+    var already = votedFor(group);
+    var html = '<div class="breadcrumbs">' +
+      '<button data-crumb="home">Inicio</button><span class="sep">/</span>' +
+      '<button data-crumb="groups">' + esc(section.label) + '</button><span class="sep">/</span>' + esc(group) + '</div>';
+
+    if(already){
+      html += '<div class="thanks"><div class="big-check">✓</div>' +
+        '<h2>Ya votaste en ' + esc(group) + '</h2>' +
+        '<p>Elegiste a <strong>' + esc(already) + '</strong>. ¡Gracias por participar!</p></div>';
+      app.innerHTML = html;
+      bindCrumbs();
+      return;
+    }
+
+    var cands = state.allCandidates.filter(function(c){ return c.grupo === group; })
+      .sort(function(a,b){ return a.orden - b.orden; });
+
+    html += '<h2 style="margin-bottom:14px;">Candidatos de ' + esc(group) + '</h2>';
+    html += '<div class="ballot-list">';
+    cands.forEach(function(c){
+      html += '<div class="candidate">' +
+        (c.foto_url ? '<img class="avatar" src="' + esc(c.foto_url) + '" alt="">' :
+          '<div class="avatar">' + esc(initials(c.nombre)) + '</div>') +
+        '<div class="cand-name">' + esc(c.nombre) + '</div>' +
+        '<button class="vote-btn" data-id="' + c.id + '" data-name="' + esc(c.nombre) + '">Votar</button>' +
+        '</div>';
+    });
+    html += '</div>';
+    app.innerHTML = html;
+    bindCrumbs();
+    app.querySelectorAll('.vote-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        openConfirm(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
+      });
+    });
+  }
+
+  function bindCrumbs(){
+    var h = app.querySelector('[data-crumb="home"]');
+    if(h) h.addEventListener('click', function(){ state.view='home'; render(); });
+    var g = app.querySelector('[data-crumb="groups"]');
+    if(g) g.addEventListener('click', function(){ state.view='groups'; render(); });
+  }
+
+  function openConfirm(candidatoId, nombre){
+    var overlay = document.createElement('div');
+    overlay.className = 'confirm-overlay';
+    overlay.innerHTML = '<div class="confirm-box">' +
+      '<div class="avatar">' + esc(initials(nombre)) + '</div>' +
+      '<h3>¿Votar por ' + esc(nombre) + '?</h3>' +
+      '<p>Este voto no se puede cambiar después.</p>' +
+      '<div class="confirm-actions">' +
+      '<button class="btn-cancel" id="cancel-vote">Cancelar</button>' +
+      '<button class="btn-confirm" id="confirm-vote">Confirmar</button>' +
+      '</div></div>';
+    document.body.appendChild(overlay);
+    overlay.querySelector('#cancel-vote').addEventListener('click', function(){ overlay.remove(); });
+    overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.remove(); });
+    overlay.querySelector('#confirm-vote').addEventListener('click', function(){
+      var btn = overlay.querySelector('#confirm-vote');
+      btn.disabled = true; btn.textContent = 'Enviando…';
+      submitVote(candidatoId, nombre, overlay);
+    });
+  }
+
+  function submitVote(candidatoId, nombre, overlay){
+    var group = state.group;
+    sb.from('ecofriends_votos').insert({
+      candidato_id: Number(candidatoId),
+      dispositivo_id: deviceId()
+    }).then(function(res){
+      overlay.remove();
+      if(res.error){
+        if(res.error.code === '23505'){
+          markVoted(group, votedFor(group) || nombre);
+          state.view = 'ballot';
+          render();
+        } else {
+          app.insertAdjacentHTML('afterbegin', '<div class="banner error">No se pudo registrar el voto. Intenta de nuevo. (' + esc(res.error.message||'') + ')</div>');
+        }
+        return;
+      }
+      markVoted(group, nombre);
+      state.view = 'ballot';
+      render();
+    });
+  }
+
+  function renderResults(){
+    var html = '<div class="breadcrumbs"><button data-crumb="home">Inicio</button><span class="sep">/</span>Resultados</div>';
+    html += '<h2 style="margin-bottom:16px;">Resultados en vivo</h2>';
+    html += '<div id="results-body" class="loading">Cargando resultados…</div>';
+    app.innerHTML = html;
+    bindCrumbs();
+
+    sb.from('ecofriends_resultados').select('*').then(function(res){
+      var body = document.getElementById('results-body');
+      if(res.error){
+        body.innerHTML = '<div class="banner error">No se pudieron cargar los resultados.</div>';
+        return;
+      }
+      var rows = res.data;
+      var bySection = {};
+      rows.forEach(function(r){
+        bySection[r.seccion] = bySection[r.seccion] || {};
+        bySection[r.seccion][r.grupo] = bySection[r.seccion][r.grupo] || [];
+        bySection[r.seccion][r.grupo].push(r);
+      });
+      var out = '';
+      SECTIONS.forEach(function(s){
+        var groups = bySection[s.id];
+        if(!groups) return;
+        out += '<h3 style="margin:22px 0 10px;">' + esc(s.label) + '</h3>';
+        GROUP_ORDER.forEach(function(g){
+          if(!groups[g]) return;
+          var cands = groups[g].slice().sort(function(a,b){ return a.orden - b.orden; });
+          var total = cands.reduce(function(a,c){ return a + Number(c.votos); }, 0);
+          var max = Math.max.apply(null, cands.map(function(c){ return Number(c.votos); }));
+          out += '<div class="results-group"><h3>' + esc(g) + '<span class="total">' + total + ' votos</span></h3>';
+          cands.forEach(function(c){
+            var v = Number(c.votos);
+            var pct = total > 0 ? Math.round((v/total)*100) : 0;
+            var isWinner = v > 0 && v === max;
+            out += '<div class="bar-row' + (isWinner ? ' winner' : '') + '">' +
+              '<span class="name">' + esc(c.candidato) + '</span>' +
+              '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
+              '<span class="count">' + v + '</span></div>';
+          });
+          out += '</div>';
+        });
+      });
+      body.outerHTML = out || '<div class="empty-state">Todavía no hay votos.</div>';
+    });
+  }
+
+  document.getElementById('nav-vote').addEventListener('click', function(){ state.view='home'; render(); });
+  document.getElementById('nav-results').addEventListener('click', function(){ state.view='results'; render(); });
+
+  sb.from('ecofriends_candidatos').select('*').order('orden').then(function(res){
+    if(res.error){
+      app.innerHTML = '<div class="banner error">No se pudo conectar con la base de datos: ' + esc(res.error.message) + '</div>';
+      return;
+    }
+    state.allCandidates = res.data;
+    state.loaded = true;
+    render();
+  });
+})();
+</script>
+</body>
+</html>
