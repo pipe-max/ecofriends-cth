@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
-    --bg:#f3f8f1;
+    --bg:#eef8f0;
     --surface:#ffffff;
     --surface-2:#eaf4e6;
     --ink:#173a24;
@@ -29,13 +29,13 @@
     --sky-deep:#1979b8;
     --danger:#d64545;
 
-    --grad-hero: linear-gradient(135deg, #0d2416, #14351f 55%, #1f5a34 100%);
+    --grad-hero: linear-gradient(135deg, #1c74a3, #4fb3e0 55%, #8adcf5 100%);
     --grad-leaf: linear-gradient(135deg, var(--leaf-deep), var(--leaf-light));
     --grad-sun: linear-gradient(135deg, var(--sun), #ffdd7a);
     --grad-accent: linear-gradient(135deg, var(--accent-deep), var(--accent));
 
     --shadow: 0 10px 30px rgba(23,58,36,.10);
-    --shadow-lg: 0 22px 46px -18px rgba(9,20,13,.4);
+    --shadow-lg: 0 22px 46px -18px rgba(9,20,13,.25);
     --sticker: 5px 5px 0 0 var(--ink);
     --sticker-sm: 3px 3px 0 0 var(--ink);
     --sticker-hover: 7px 7px 0 0 var(--ink);
@@ -45,23 +45,22 @@
     --bounce: cubic-bezier(.34,1.56,.64,1);
     --ease: cubic-bezier(.22,1,.36,1);
 
-    --tab-hover-pre:#fff3c4;
-    --tab-hover-bac:#e1f3ff;
     --candidate-hover:#fff3c4;
+    --banner-deep:#0d3550;
 
-    --tint-pre:#fff3d6; --tint-pre-line:#f5d788;
-    --tint-pri:#dbeafe; --tint-pri-line:#a8cdf5;
-    --tint-bac:#fbdfe1; --tint-bac-line:#f2b3b8;
+    --tint-pre:#eafbf1; --tint-pre-line:#a8e2ba;
+    --tint-pri:#d3f2dc; --tint-pri-line:#7fd196;
+    --tint-bac:#b7e8c6; --tint-bac-line:#4bab6c;
     color-scheme: light;
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
-      --bg:#0e1a13;
-      --surface:#152618;
-      --surface-2:#1c331f;
+      --bg:#102019;
+      --surface:#1b3324;
+      --surface-2:#20402c;
       --ink:#eaf3ea;
       --ink-soft:#a9c4ac;
-      --line:#28402c;
+      --line:#2c4c37;
       --accent:#ff8256;
       --accent-deep:#ffa478;
       --accent-soft:#3a2419;
@@ -73,24 +72,22 @@
       --sky:#74c9ee;
       --danger:#ff8080;
       --shadow: 0 10px 30px rgba(0,0,0,.35);
-      --shadow-lg: 0 22px 46px -18px rgba(0,0,0,.55);
-      --tab-hover-pre:#3a2f10;
-      --tab-hover-bac:#12283a;
+      --shadow-lg: 0 22px 46px -18px rgba(0,0,0,.5);
       --candidate-hover:#3a2f10;
 
-      --tint-pre:#2c2410; --tint-pre-line:#5c4a1a;
-      --tint-pri:#12283a; --tint-pri-line:#1f4060;
-      --tint-bac:#331821; --tint-bac-line:#5c2635;
+      --tint-pre:#2d5c40; --tint-pre-line:#57a374;
+      --tint-pri:#214a33; --tint-pri-line:#427b57;
+      --tint-bac:#1a4530; --tint-bac-line:#316a48;
       color-scheme: dark;
     }
   }
   :root[data-theme="dark"]{
-    --bg:#0e1a13;
-    --surface:#152618;
-    --surface-2:#1c331f;
+    --bg:#102019;
+    --surface:#1b3324;
+    --surface-2:#20402c;
     --ink:#eaf3ea;
     --ink-soft:#a9c4ac;
-    --line:#28402c;
+    --line:#2c4c37;
     --accent:#ff8256;
     --accent-deep:#ffa478;
     --accent-soft:#3a2419;
@@ -102,14 +99,12 @@
     --sky:#74c9ee;
     --danger:#ff8080;
     --shadow: 0 10px 30px rgba(0,0,0,.35);
-    --shadow-lg: 0 22px 46px -18px rgba(0,0,0,.55);
-    --tab-hover-pre:#3a2f10;
-    --tab-hover-bac:#12283a;
+    --shadow-lg: 0 22px 46px -18px rgba(0,0,0,.5);
     --candidate-hover:#3a2f10;
 
-    --tint-pre:#2c2410; --tint-pre-line:#5c4a1a;
-    --tint-pri:#12283a; --tint-pri-line:#1f4060;
-    --tint-bac:#331821; --tint-bac-line:#5c2635;
+    --tint-pre:#1f3c2a; --tint-pre-line:#35614a;
+    --tint-pri:#193826; --tint-pri-line:#2c5a41;
+    --tint-bac:#122c1e; --tint-bac-line:#204a34;
     color-scheme: dark;
   }
   *{box-sizing:border-box;}
@@ -214,8 +209,6 @@
     content:"✓ Ya votaste";position:absolute;top:-9px;right:10px;font-size:.62rem;font-weight:800;
     color:#fff;background:var(--leaf-deep);padding:3px 9px;border-radius:999px;border:1.5px solid var(--ink);
   }
-  .section-block.pre .group-card:hover{background:var(--tab-hover-pre);}
-  .section-block.bac .group-card:hover{background:var(--tab-hover-bac);}
 
   .decided-card{
     border:2.5px dashed var(--sun-deep);background:var(--surface-2);border-radius:var(--radius-md);
@@ -236,7 +229,7 @@
   }
   .ballot-banner::before{
     content:"";position:absolute;top:-60%;left:-16%;width:75%;height:220%;
-    background:linear-gradient(128deg, var(--sun) 0 30%, #10251a 30% 34%, var(--sky) 34% 52%, #10251a 52% 56%, var(--accent) 56% 74%, transparent 74%);
+    background:linear-gradient(128deg, var(--sun) 0 30%, var(--banner-deep) 30% 34%, var(--leaf-light) 34% 52%, var(--banner-deep) 52% 56%, var(--accent) 56% 74%, transparent 74%);
     opacity:.8;pointer-events:none;
   }
   .banner-inner{position:relative;z-index:1;}
