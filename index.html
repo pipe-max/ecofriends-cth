@@ -79,15 +79,14 @@
   .top-hairline{position:absolute;left:0;right:0;top:0;height:6px;z-index:1;
     background:linear-gradient(90deg, var(--sun) 25%, var(--leaf-light) 50%, var(--sky) 75%, var(--accent));}
   .site-header .container{position:relative;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center;}
-  .site-header .logo-frame{width:min(60vw,320px);}
+  .site-header .logo-frame{width:min(78vw,420px);}
   .site-header .logo-frame img{display:block;width:100%;height:auto;}
-  .site-header .kicker{
-    font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--sun);margin-top:4px;
-  }
+  .school-badge{position:absolute;top:18px;right:18px;width:min(20vw,86px);z-index:2;}
+  .school-badge img{display:block;width:100%;height:auto;filter:drop-shadow(0 3px 8px rgba(0,0,0,.3));}
   .site-header h1{
     font-size:clamp(1.6rem,1.1rem + 2vw,2.4rem);font-weight:800;margin:2px 0 0;line-height:1.08;
-    background:linear-gradient(120deg,#fff 25%,var(--sun) 60%,#fff 90%);
-    -webkit-background-clip:text;background-clip:text;color:transparent;
+    color:var(--leaf-deep);
+    text-shadow:0 0 6px #fff, 0 0 12px #fff, 0 2px 0 #fff;
   }
   nav.top-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:12px;}
   .btn-hero{
@@ -255,9 +254,9 @@
 
 <header class="site-header">
   <div class="top-hairline"></div>
+  <div class="school-badge"><img src="CTH.png" alt="Colegio Theodoro Herzl" /></div>
   <div class="container">
     <div class="logo-frame"><img src="theo.png" alt="Ecofriends" /></div>
-    <span class="kicker">Theodoro Hertzl</span>
     <h1>Elección de Ecofriends 2026–2027</h1>
     <nav class="top-actions">
       <button class="pill-btn btn-hero" id="nav-vote">🗳️ Votar</button>
