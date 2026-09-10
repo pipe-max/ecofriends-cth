@@ -10,7 +10,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
   :root{
-    --bg:#8bc34a;
+    --bg:#6fa860;
     --surface:#ffffff;
     --surface-2:#eaf4e6;
     --ink:#173a24;
@@ -48,9 +48,7 @@
     --candidate-hover:#fff3c4;
     --banner-deep:#0d3550;
 
-    --tint-pre:#eafbf1; --tint-pre-line:#a8e2ba;
-    --tint-pri:#d3f2dc; --tint-pri-line:#7fd196;
-    --tint-bac:#b7e8c6; --tint-bac-line:#4bab6c;
+    --tint-bg:#cfe8c0; --tint-line:#9cc98a;
     color-scheme: light;
   }
   *{box-sizing:border-box;}
@@ -100,9 +98,8 @@
   .site-header .logo-frame{
     width:min(92vw,460px);border-radius:20px;overflow:hidden;
     border:3px solid #fff;box-shadow:0 14px 28px rgba(0,0,0,.35);
-    transform:rotate(-2deg);transition:transform .3s var(--bounce);
+    transform:rotate(-2deg);
   }
-  .site-header .logo-frame:hover{transform:rotate(0deg) scale(1.03);}
   .site-header .logo-frame img{display:block;width:100%;height:auto;}
   .site-header .kicker{
     font-size:.72rem;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--sun);margin-top:4px;
@@ -130,12 +127,9 @@
   /* ---------- Section blocks ---------- */
   .section-block{
     margin-bottom:22px;padding:22px 20px 24px;border-radius:var(--radius-lg);
-    background:var(--tint-bg,var(--bg));border:2px solid var(--tint-line,var(--line));
+    background:var(--tint-bg);border:2px solid var(--tint-line);
   }
   .section-block h2{font-size:1.4rem;margin-bottom:16px;}
-  .section-block.pre{--tint-bg:var(--tint-pre);--tint-line:var(--tint-pre-line);}
-  .section-block.pri{--tint-bg:var(--tint-pri);--tint-line:var(--tint-pri-line);}
-  .section-block.bac{--tint-bg:var(--tint-bac);--tint-line:var(--tint-bac-line);}
 
   /* ---------- Groups grid ---------- */
   .groups-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;}
