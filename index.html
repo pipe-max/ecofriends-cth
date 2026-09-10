@@ -287,6 +287,13 @@
     {id:"Bachillerato", label:"Bachillerato", cls:"bac"}
   ];
 
+  // Ajustes manuales de encuadre por foto (nombre exacto del candidato -> zoom/posición).
+  var PHOTO_ADJUST = {
+    "Mar Toledo": {scale:1.9, position:"center 20%"},
+    "Benjamín Sage": {scale:1.55, position:"center 22%"},
+    "Juan Martín Arango": {scale:1.05, position:"center 5%"}
+  };
+
   var DECIDED = {
     "K5 Bet": "Jacob Goleburn"
   };
@@ -367,8 +374,10 @@
       '<div class="banner-title">' + esc(group) + '</div></div></div>';
     html += '<div class="ballot-card"><div class="candidates-grid">';
     cands.forEach(function(c){
+      var adj = PHOTO_ADJUST[c.nombre];
+      var imgStyle = adj ? ' style="transform:scale(' + adj.scale + ');object-position:' + adj.position + ';"' : '';
       html += '<button class="candidate-btn" data-id="' + c.id + '" data-name="' + esc(c.nombre) + '">' +
-        (c.foto_url ? '<div class="avatar"><img src="' + esc(c.foto_url) + '" alt=""></div>' :
+        (c.foto_url ? '<div class="avatar"><img src="' + esc(c.foto_url) + '" alt=""' + imgStyle + '></div>' :
           '<div class="avatar">' + esc(initials(c.nombre)) + '</div>') +
         '<div class="cand-name">' + esc(c.nombre) + '</div>' +
         '</button>';
