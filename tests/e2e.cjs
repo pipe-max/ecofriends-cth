@@ -18,10 +18,10 @@ async function route(request){
   if(name==='ecofriends_admin_snapshot')return json(snapshot());
   if(name==='ecofriends_admin_set_group'){
    const g=groups.find(g=>g.grupo===payload.p_grupo);
-   if(payload.p_open && groups.some(x=>x.voting_open&&x!==g))return json({message:'Cierra el salón abierto antes de habilitar otro.'},400);
    g.voting_open=payload.p_open;g.completed_at=payload.p_open?null:new Date().toISOString();return json(true);
   }
   if(name==='ecofriends_admin_set_expected'){groups.find(g=>g.grupo===payload.p_grupo).expected_voters=payload.p_expected;return json(true);}
+  if(name==='ecofriends_admin_open_all'){groups.forEach(g=>{g.voting_open=true;g.completed_at=null;});return json(true);}
   if(name==='ecofriends_admin_close_all'){groups.forEach(g=>{if(g.voting_open)g.completed_at=new Date().toISOString();g.voting_open=false;});return json(true);}
   if(name==='ecofriends_admin_report'){
    if(payload.p_report_id)return json(reports.find(r=>r.report_id===payload.p_report_id));
@@ -77,7 +77,19 @@ async function route(request){
  await admin.waitForFunction(()=>!document.querySelector('.group-control').disabled);
  assert.equal(await admin.locator('#final-report').isDisabled(),true);
  const row=admin.locator('.admin-group[data-group="6° Bet"]');await row.locator('input').fill('40');await row.locator('form button').click();await admin.waitForFunction(()=>document.querySelector('.participation').textContent.includes('40 esperados'));
- admin.on('dialog',dialog=>dialog.accept());await row.locator('.group-control').click();await admin.waitForFunction(()=>!document.querySelector('#final-report').disabled);
+ admin.on('dialog',dialog=>dialog.accept());
+ const other=admin.locator('.admin-group[data-group="7° Alef"] .group-control');
+ await other.click();await admin.waitForFunction(()=>document.querySelectorAll('.admin-group.open').length===2);
+ assert.match(await admin.locator('#sync-status').innerText(),/Salones abiertos: 2 de 2/);
+ assert.equal(await admin.locator('#open-all').isDisabled(),true);
+ await admin.locator('#close-all').click();await admin.waitForFunction(()=>!document.querySelector('#final-report').disabled);
+ await admin.locator('#open-all').click();await admin.waitForFunction(()=>document.querySelectorAll('.admin-group.open').length===2);
+ assert.equal(votes.size,40);assert.ok(groups.every(g=>g.completed_at===null));
+ await page.reload();await page.locator('[data-group="6° Bet"]').waitFor();await page.locator('[data-group="7° Alef"]').waitFor();
+ await row.locator('.group-control').click();await admin.waitForFunction(()=>document.querySelectorAll('.admin-group.open').length===1);
+ assert.equal(await admin.locator('#final-report').isDisabled(),true);
+ await admin.locator('#close-all').click();
+ console.log('PASS: multiple groups, open all preserves votes and reopens completed groups, voter access and close all.');await admin.waitForFunction(()=>!document.querySelector('#final-report').disabled);
  await admin.locator('#final-report').click();await admin.locator('#print-report').waitFor();
  assert.match(await admin.locator('#app').innerText(),/Total de votos: 40/);assert.match(await admin.locator('#app').innerText(),/Jacob Goleburn/);
  assert.match(await admin.locator('#app').innerText(),/Candidata de prueba con nombre y apellidos completos/);
