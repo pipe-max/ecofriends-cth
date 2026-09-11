@@ -107,6 +107,9 @@
   .btn.secondary{background:var(--surface-2);color:var(--ink);}
   .btn.danger{background:var(--danger);}
   .admin-group{padding:16px;border:2px solid var(--line);border-radius:14px;margin:10px 0;display:grid;grid-template-columns:1fr auto;gap:10px;}
+  .group-buttons{display:flex;flex-direction:column;gap:8px;align-items:stretch;}
+  .group-buttons .btn{width:auto;white-space:nowrap;}
+  .group-reset{font-size:.8rem;padding:8px 16px;}
   .admin-group.open{border-color:var(--leaf);background:var(--leaf-soft);}
   .admin-group h3{font-size:1.15rem;}
   .g-status{font-size:.8rem;font-weight:800;color:var(--ink-soft);}
@@ -127,7 +130,7 @@
   .report-winner{font-weight:800;}
   .report-section{margin-top:22px;break-after:avoid;}
   button:focus-visible,a:focus-visible{outline:3px solid var(--leaf);outline-offset:4px;}
-  @media(max-width:600px){header.top{flex-direction:column;text-align:center;}header.top img{width:130px;height:130px;}.card{padding:16px;}.admin-group{grid-template-columns:1fr;}.group-control{width:100%;}}
+  @media(max-width:600px){header.top{flex-direction:column;text-align:center;}header.top img{width:130px;height:130px;}.card{padding:16px;}.admin-group{grid-template-columns:1fr;}.group-control{width:100%;}.group-buttons .btn{width:100%;}}
   @page{size:A4;margin:14mm;}
   @media print{
     body{background:white;color:#14251a;font-family:Arial,sans-serif;}

@@ -34,7 +34,7 @@
       const block=document.createElement('section');block.innerHTML='<h2 class="section-title">'+esc(section)+'</h2>';
       snapshot.groups.filter(g=>g.seccion===section).forEach(g=>{
         const row=document.createElement('div');row.className='admin-group';row.dataset.group=g.grupo;
-        row.innerHTML='<div><h3>'+esc(g.grupo)+'</h3><div class="g-status"></div><p class="participation"></p><form class="expected-form"><label>Estudiantes que votarán <input type="number" min="0" max="500" step="1" aria-label="Estudiantes esperados de '+esc(g.grupo)+'" placeholder="Sin definir"></label><button>Guardar cantidad</button></form></div><button class="btn group-control"></button>';
+        row.innerHTML='<div><h3>'+esc(g.grupo)+'</h3><div class="g-status"></div><p class="participation"></p><form class="expected-form"><label>Estudiantes que votarán <input type="number" min="0" max="500" step="1" aria-label="Estudiantes esperados de '+esc(g.grupo)+'" placeholder="Sin definir"></label><button>Guardar cantidad</button></form></div><div class="group-buttons"><button class="btn group-control"></button><button class="btn danger group-reset" type="button">Reiniciar votos</button></div>';
         const input=row.querySelector('input');input.addEventListener('input',()=>input.dataset.dirty='true');
         row.querySelector('form').addEventListener('submit',event=>{
           event.preventDefault();const count=input.value===''?null:Number(input.value);
@@ -48,6 +48,12 @@
             if(!window.confirm('Cerrar '+g.grupo+': '+current.total+' votos recibidos, '+expected+'. Confirma que todos los puestos terminaron de guardar.'))return;
           }else if(current.completed_at && !window.confirm(g.grupo+' ya fue finalizado. ¿Reabrirlo conservando sus votos?'))return;
           action(async()=>{await rpc('ecofriends_admin_set_group',{p_grupo:g.grupo,p_open:!current.voting_open});toast(g.grupo+(current.voting_open?' cerrado.':' habilitado.'));});
+        });
+        row.querySelector('.group-reset').addEventListener('click',()=>{
+          const current=snapshot.groups.find(item=>item.grupo===g.grupo);
+          if(!window.confirm('¿Borrar los '+current.total+' votos de '+g.grupo+' y dejarlo en cero? Esta acción no se puede deshacer.'))return;
+          if(!window.confirm('Confirma otra vez: se eliminarán permanentemente '+current.total+' votos de '+g.grupo+'.'))return;
+          action(async()=>{const deleted=await rpc('ecofriends_admin_reset_group',{p_grupo:g.grupo});toast(g.grupo+': '+deleted+' votos eliminados. Salón reiniciado y cerrado.');});
         });
         block.appendChild(row);
       });document.getElementById('groups').appendChild(block);
