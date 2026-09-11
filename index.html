@@ -205,6 +205,13 @@
   }
   .thanks h2{margin-bottom:6px;}
   .thanks p{color:var(--ink-soft);font-weight:700;}
+  .thanks .btn-next-vote{
+    margin-top:12px;padding:12px 22px;max-width:100%;min-height:44px;
+    border:2.5px solid var(--ink);border-radius:999px;
+    font-family:'Baloo 2','Nunito',system-ui,sans-serif;font-size:1rem;font-weight:800;
+    cursor:pointer;transition:.16s var(--bounce);
+  }
+  .btn-next-vote:focus-visible{outline:3px solid var(--sun-deep);outline-offset:4px;}
 
   .banner{
     display:flex;gap:10px;align-items:center;padding:12px 16px;border-radius:var(--radius-md);
@@ -440,9 +447,15 @@
 
   function renderVoteSuccess(nombre){
     app.innerHTML = '<div class="thanks"><div class="big-check">✓</div>' +
-      '<h2>¡Voto registrado!</h2>' +
-      '<p>Gracias por participar. El siguiente estudiante ya puede votar.</p></div>';
-    setTimeout(function(){ state.view = 'ballot'; render(); }, 2200);
+      '<h2 id="vote-success-title" tabindex="-1">¡Voto registrado!</h2>' +
+      '<p>Gracias por participar. Tu voto ya quedó guardado.<br>' +
+      'Pulsa Aceptar cuando sea el turno del siguiente estudiante.</p>' +
+      '<button type="button" class="btn-confirm btn-next-vote" id="next-vote">Aceptar y continuar con el siguiente voto</button></div>';
+    document.getElementById('vote-success-title').focus();
+    document.getElementById('next-vote').addEventListener('click', function(){
+      state.view = 'ballot';
+      render();
+    });
   }
 
   function renderResults(){
