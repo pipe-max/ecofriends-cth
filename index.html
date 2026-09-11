@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="api.js"></script>
 <script src="photo-framing.js"></script>
 <style>
   :root{
@@ -253,6 +253,11 @@
     .avatar{width:90px;height:90px;}
     .bar-row .name{width:120px;}
   }
+  .connection-status{max-width:964px;margin:14px auto 0;padding:0 18px;font-weight:800;}
+  .connection-status:not(:empty){padding:12px 18px;background:#fff3c4;border:2px solid var(--sun-deep);border-radius:12px;}
+  .candidate-btn:disabled{opacity:.6;cursor:wait;}
+  .confirm-box button:disabled{opacity:.6;cursor:wait;}
+  .recovery-button{padding:12px 22px;border:2px solid var(--ink);border-radius:999px;cursor:pointer;font:800 1rem 'Nunito',sans-serif;}
 </style>
 </head>
 <body>
@@ -265,267 +270,17 @@
     <h1>Elección de Ecofriends 2026–2027</h1>
     <nav class="top-actions">
       <button class="pill-btn btn-hero" id="nav-vote">🗳️ Votar</button>
-      <button class="pill-btn btn-hero" id="nav-results">📊 Resultados</button>
     </nav>
   </div>
 </header>
 
+<div id="connection-status" class="connection-status" role="status" aria-live="polite"></div>
 <main class="wrap" id="app">
   <div class="loading">Cargando…</div>
 </main>
 
 <footer>Colegio Theodoro Hertzl · <a href="admin.html">Admin</a></footer>
 
-<script>
-(function(){
-  "use strict";
-
-  var SUPABASE_URL = "https://qnikgvtjjzxsjcbquazd.supabase.co";
-  var SUPABASE_KEY = "sb_publishable_yvPIKT1llfRA5XmOy9CYQQ_E_ZeH0Sk";
-  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-  var GROUP_ORDER = ["K3 Alef","K3 Bet","K4 Alef","K4 Bet","K5 Alef","K5 Bet",
-    "1° Alef","1° Bet","2° Alef","2° Bet","3° Alef","3° Bet","4° Alef","4° Bet",
-    "5° Alef","5° Bet","6° Alef","6° Bet","7° Alef","7° Bet","8° Alef","8° Bet",
-    "9° Alef","9° Bet","10° Alef","10° Bet","11° Alef","11° Bet","12° Alef","12° Bet"];
-
-  var SECTIONS = [
-    {id:"Preescolar", label:"Preescolar", cls:"pre"},
-    {id:"Primaria", label:"Primaria", cls:"pri"},
-    {id:"Bachillerato", label:"Bachillerato", cls:"bac"}
-  ];
-
-  var DECIDED = {
-    "K5 Bet": "Jacob Goleburn"
-  };
-
-  var app = document.getElementById("app");
-  var state = { view:"home", section:null, group:null, candidates:[], loaded:false, pendingVote:null, gruposAbiertos:{} };
-
-  function esc(s){
-    return String(s).replace(/[&<>"']/g, function(c){
-      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
-    });
-  }
-  function initials(name){
-    var parts = name.trim().split(/\s+/);
-    return ((parts[0]||"")[0]||"") + ((parts[1]||"")[0]||"");
-  }
-  function avatar(candidate){
-    if(!candidate.foto_url) return '<div class="avatar">' + esc(initials(candidate.nombre)) + '</div>';
-    var style = window.ecofriendsPhotoStyle ? window.ecofriendsPhotoStyle(candidate.foto_url) : '';
-    return '<div class="avatar"><img src="' + esc(candidate.foto_url) + '" alt=""' +
-      (style ? ' style="' + esc(style) + '"' : '') + '></div>';
-  }
-  function deviceId(){
-    var k = "ecofriends_device_id";
-    var v = localStorage.getItem(k);
-    if(!v){ v = (crypto.randomUUID ? crypto.randomUUID() : (Date.now()+"-"+Math.random())); localStorage.setItem(k, v); }
-    return v;
-  }
-  function groupsInSection(sectionId){
-    var set = {};
-    state.allCandidates.forEach(function(c){ if(c.seccion === sectionId) set[c.grupo] = true; });
-    if(sectionId === "Preescolar") set["K5 Bet"] = true;
-    return GROUP_ORDER.filter(function(g){ return set[g]; });
-  }
-
-  function render(){
-    if(state.view === "home") return renderHome();
-    if(state.view === "ballot") return renderBallot();
-    if(state.view === "results") return renderResults();
-  }
-
-  function renderHome(){
-    var html = '';
-    SECTIONS.forEach(function(s){
-      var groups = groupsInSection(s.id);
-      if(!groups.length) return;
-      html += '<div class="section-block ' + s.cls + '"><h2>' + esc(s.label) + '</h2><div class="groups-grid">';
-      groups.forEach(function(g){
-        if(DECIDED[g]){
-          html += '<div class="group-card done"><span class="g">' + esc(g) + '</span>' +
-            '<span class="c">Ya decidido 🎉</span></div>';
-        } else if(!state.gruposAbiertos[g]){
-          html += '<div class="group-card locked"><span class="g">' + esc(g) + '</span>' +
-            '<span class="c">🔒 Aún no abre</span></div>';
-        } else {
-          var count = state.allCandidates.filter(function(c){ return c.grupo === g; }).length;
-          html += '<button class="group-card" data-section="' + s.id + '" data-group="' + esc(g) + '">' +
-            '<span class="g">' + esc(g) + '</span><span class="c">' + count + ' candidatos</span></button>';
-        }
-      });
-      html += '</div></div>';
-    });
-    app.innerHTML = html;
-    app.querySelectorAll('[data-group]').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        state.section = btn.getAttribute('data-section');
-        state.group = btn.getAttribute('data-group');
-        state.view = 'ballot';
-        render();
-      });
-    });
-  }
-
-  function renderBallot(){
-    var group = state.group;
-    var html = '<div class="breadcrumbs">' +
-      '<button data-crumb="home">Inicio</button><span class="sep">/</span>' + esc(group) + '</div>';
-
-    var cands = state.allCandidates.filter(function(c){ return c.grupo === group; })
-      .sort(function(a,b){ return a.orden - b.orden; });
-
-    html += '<div class="ballot-banner"><div class="banner-inner">' +
-      '<div class="banner-kicker">Elige al Ecofriend de</div>' +
-      '<div class="banner-title">' + esc(group) + '</div></div></div>';
-    html += '<div class="ballot-card"><div class="candidates-grid">';
-    cands.forEach(function(c){
-      html += '<button class="candidate-btn" data-id="' + c.id + '" data-name="' + esc(c.nombre) + '">' +
-        avatar(c) +
-        '<div class="cand-name">' + esc(c.nombre) + '</div>' +
-        '</button>';
-    });
-    html += '</div></div>';
-    app.innerHTML = html;
-    bindCrumbs();
-    app.querySelectorAll('.candidate-btn').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        openConfirm(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
-      });
-    });
-  }
-
-  function bindCrumbs(){
-    var h = app.querySelector('[data-crumb="home"]');
-    if(h) h.addEventListener('click', function(){ state.view='home'; render(); });
-  }
-
-  function openConfirm(candidatoId, nombre){
-    var candidate = state.allCandidates.find(function(c){ return String(c.id) === String(candidatoId); });
-    var overlay = document.createElement('div');
-    overlay.className = 'confirm-overlay';
-    overlay.innerHTML = '<div class="confirm-box">' +
-      avatar(candidate || {nombre:nombre}) +
-      '<h3>¿Votar por ' + esc(nombre) + '?</h3>' +
-      '<p>Este voto no se puede cambiar después.</p>' +
-      '<div class="confirm-actions">' +
-      '<button class="btn-cancel" id="cancel-vote">Cancelar</button>' +
-      '<button class="btn-confirm" id="confirm-vote">Confirmar</button>' +
-      '</div></div>';
-    document.body.appendChild(overlay);
-    overlay.querySelector('#cancel-vote').addEventListener('click', function(){ overlay.remove(); });
-    overlay.addEventListener('click', function(e){ if(e.target === overlay) overlay.remove(); });
-    overlay.querySelector('#confirm-vote').addEventListener('click', function(){
-      var btn = overlay.querySelector('#confirm-vote');
-      btn.disabled = true; btn.textContent = 'Enviando…';
-      submitVote(candidatoId, nombre, overlay);
-    });
-  }
-
-  function submitVote(candidatoId, nombre, overlay){
-    var group = state.group;
-    sb.from('ecofriends_votos').insert({
-      candidato_id: Number(candidatoId),
-      dispositivo_id: deviceId()
-    }).then(function(res){
-      overlay.remove();
-      if(res.error){
-        if(res.error.code === 'P0001'){
-          state.gruposAbiertos[group] = false;
-          state.view = 'home';
-          render();
-          app.insertAdjacentHTML('afterbegin', '<div class="banner error">La votación de ' + esc(group) + ' todavía no está habilitada.</div>');
-        } else {
-          app.insertAdjacentHTML('afterbegin', '<div class="banner error">No se pudo registrar el voto. Intenta de nuevo. (' + esc(res.error.message||'') + ')</div>');
-        }
-        return;
-      }
-      renderVoteSuccess(nombre);
-    });
-  }
-
-  function renderVoteSuccess(nombre){
-    app.innerHTML = '<div class="thanks"><div class="big-check">✓</div>' +
-      '<h2 id="vote-success-title" tabindex="-1">¡Voto registrado!</h2>' +
-      '<p>Gracias por participar. Tu voto ya quedó guardado.<br>' +
-      'Pulsa Aceptar cuando sea el turno del siguiente estudiante.</p>' +
-      '<button type="button" class="btn-confirm btn-next-vote" id="next-vote">Aceptar y continuar con el siguiente voto</button></div>';
-    document.getElementById('vote-success-title').focus();
-    document.getElementById('next-vote').addEventListener('click', function(){
-      state.view = 'ballot';
-      render();
-    });
-  }
-
-  function renderResults(){
-    var html = '<div class="breadcrumbs"><button data-crumb="home">Inicio</button><span class="sep">/</span>Resultados</div>';
-    html += '<h2 style="margin-bottom:16px;">Resultados en vivo</h2>';
-    html += '<div id="results-body" class="loading">Cargando resultados…</div>';
-    app.innerHTML = html;
-    bindCrumbs();
-
-    sb.from('ecofriends_resultados').select('*').then(function(res){
-      var body = document.getElementById('results-body');
-      if(res.error){
-        body.innerHTML = '<div class="banner error">No se pudieron cargar los resultados.</div>';
-        return;
-      }
-      var rows = res.data;
-      var bySection = {};
-      rows.forEach(function(r){
-        bySection[r.seccion] = bySection[r.seccion] || {};
-        bySection[r.seccion][r.grupo] = bySection[r.seccion][r.grupo] || [];
-        bySection[r.seccion][r.grupo].push(r);
-      });
-      var out = '';
-      SECTIONS.forEach(function(s){
-        var groups = bySection[s.id];
-        if(!groups) return;
-        out += '<h3 style="margin:22px 0 10px;">' + esc(s.label) + '</h3>';
-        GROUP_ORDER.forEach(function(g){
-          if(!groups[g]) return;
-          var cands = groups[g].slice().sort(function(a,b){ return a.orden - b.orden; });
-          var total = cands.reduce(function(a,c){ return a + Number(c.votos); }, 0);
-          var max = Math.max.apply(null, cands.map(function(c){ return Number(c.votos); }));
-          out += '<div class="results-group"><h3>' + esc(g) + '<span class="total">' + total + ' votos</span></h3>';
-          cands.forEach(function(c){
-            var v = Number(c.votos);
-            var pct = total > 0 ? Math.round((v/total)*100) : 0;
-            var isWinner = v > 0 && v === max;
-            out += '<div class="bar-row' + (isWinner ? ' winner' : '') + '">' +
-              '<span class="name">' + esc(c.candidato) + '</span>' +
-              '<div class="bar-track"><div class="bar-fill" style="width:' + pct + '%"></div></div>' +
-              '<span class="count">' + v + '</span></div>';
-          });
-          out += '</div>';
-        });
-      });
-      body.outerHTML = out || '<div class="empty-state">Todavía no hay votos.</div>';
-    });
-  }
-
-  document.getElementById('nav-vote').addEventListener('click', function(){ state.view='home'; render(); });
-  document.getElementById('nav-results').addEventListener('click', function(){ state.view='results'; render(); });
-
-  Promise.all([
-    sb.from('ecofriends_candidatos').select('*').order('orden'),
-    sb.from('ecofriends_grupos').select('grupo, voting_open')
-  ]).then(function(results){
-    var candRes = results[0], gruposRes = results[1];
-    if(candRes.error){
-      app.innerHTML = '<div class="banner error">No se pudo conectar con la base de datos: ' + esc(candRes.error.message) + '</div>';
-      return;
-    }
-    state.allCandidates = candRes.data;
-    state.gruposAbiertos = {};
-    if(!gruposRes.error){
-      gruposRes.data.forEach(function(g){ state.gruposAbiertos[g.grupo] = !!g.voting_open; });
-    }
-    state.loaded = true;
-    render();
-  });
-})();
-</script>
+<script src="voting.js"></script>
 </body>
 </html>

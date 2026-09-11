@@ -4,3 +4,12 @@ wrangler.toml
 .assetsignore
 fotos-candidatos
 fotos-candidatos/**
+db
+db/**
+tests
+tests/**
+node_modules
+node_modules/**
+package.json
+package-lock.json
+README.md

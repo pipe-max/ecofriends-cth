@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="api.js"></script>
 <style>
   :root{
     --bg:#eef8f0;
@@ -101,6 +101,47 @@
   }
   .toast.show{opacity:1;}
   .toast.error{background:var(--danger);}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;align-items:center;}
+  .toolbar .btn,.group-control{width:auto;}
+  .btn.secondary{background:var(--surface-2);color:var(--ink);}
+  .btn.danger{background:var(--danger);}
+  .admin-group{padding:16px;border:2px solid var(--line);border-radius:14px;margin:10px 0;display:grid;grid-template-columns:1fr auto;gap:10px;}
+  .admin-group.open{border-color:var(--leaf);background:var(--leaf-soft);}
+  .admin-group h3{font-size:1.15rem;}
+  .g-status{font-size:.8rem;font-weight:800;color:var(--ink-soft);}
+  .participation{font-weight:800;margin:6px 0;}
+  .expected-form{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:.85rem;}
+  .expected-form input{width:82px;padding:8px;border:2px solid var(--line);border-radius:8px;font:inherit;}
+  .expected-form button{padding:7px 12px;border-radius:8px;cursor:pointer;border:2px solid var(--ink);background:white;font:inherit;}
+  #sync-status{font-weight:700;min-height:1.4em;}
+  .mismatch{color:var(--danger);}
+  .report-group{border:1px solid var(--line);border-radius:12px;padding:14px;margin:14px 0;break-inside:avoid;}
+  .report-group h3{font-size:1.15rem;}
+  .report-group p{margin:6px 0;font-size:.88rem;}
+  .report-table{width:100%;border-collapse:collapse;font-size:.88rem;}
+  .report-table th,.report-table td{padding:7px 5px;text-align:left;border-bottom:1px solid var(--line);vertical-align:top;overflow-wrap:anywhere;}
+  .report-table th:nth-child(n+2),.report-table td:nth-child(n+2){text-align:right;white-space:nowrap;}
+  .report-table th:first-child{width:72%;}
+  .report-meta{font-size:.85rem;overflow-wrap:anywhere;}
+  .report-winner{font-weight:800;}
+  .report-section{margin-top:22px;break-after:avoid;}
+  button:focus-visible,a:focus-visible{outline:3px solid var(--leaf);outline-offset:4px;}
+  @media(max-width:600px){header.top{flex-direction:column;text-align:center;}header.top img{width:130px;height:130px;}.card{padding:16px;}.admin-group{grid-template-columns:1fr;}.group-control{width:100%;}}
+  @page{size:A4;margin:14mm;}
+  @media print{
+    body{background:white;color:#14251a;font-family:Arial,sans-serif;}
+    body:not(.printing-report) .wrap{display:none;}
+    body:not(.printing-report)::before{content:'Abre el informe final desde el panel de administración para guardar el PDF.';}
+    header.top,.no-print,#toast{display:none !important;}
+    .wrap{max-width:none;padding:0;margin:0;}
+    .card{border:0;box-shadow:none;border-radius:0;padding:0;margin:0;}
+    h1,h2,h3{font-family:Arial,sans-serif;}
+    .report-group{border:1px solid #a0aaa2;margin:9px 0;padding:10px;}
+    .report-section{font-size:15pt;}
+    .report-table{font-size:10pt;}
+    .report-group p,.report-meta{font-size:9pt;}
+  }
 </style>
 </head>
 <body>
@@ -110,7 +151,7 @@
     <img src="theo.png" alt="Ecofriends" />
     <div>
       <h1>Panel de administración</h1>
-      <p>Habilitar votación por salón · Ecofriends 2026–2027</p>
+      <p>Salones, participación y resultados · Ecofriends 2026–2027</p>
     </div>
   </header>
 
@@ -119,137 +160,7 @@
 
 <div class="toast" id="toast"></div>
 
-<script>
-(function(){
-  "use strict";
-
-  var SUPABASE_URL = "https://qnikgvtjjzxsjcbquazd.supabase.co";
-  var SUPABASE_KEY = "sb_publishable_yvPIKT1llfRA5XmOy9CYQQ_E_ZeH0Sk";
-  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  var CODE_KEY = "ecofriends_admin_code";
-
-  var SECTIONS = ["Preescolar", "Primaria", "Bachillerato"];
-  var app = document.getElementById("app");
-
-  function esc(s){
-    return String(s).replace(/[&<>"']/g, function(c){
-      return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];
-    });
-  }
-
-  function showToast(msg, isError){
-    var t = document.getElementById("toast");
-    t.textContent = msg;
-    t.className = "toast show" + (isError ? " error" : "");
-    setTimeout(function(){ t.className = "toast"; }, 2200);
-  }
-
-  function init(){
-    var code = localStorage.getItem(CODE_KEY);
-    if(!code){ renderActivation(); return; }
-    sb.rpc('ecofriends_verify_admin', { p_code: code }).then(function(res){
-      if(res.error || !res.data){
-        localStorage.removeItem(CODE_KEY);
-        renderActivation('Código incorrecto o vencido. Intenta de nuevo.');
-        return;
-      }
-      renderPanel(code);
-    });
-  }
-
-  function renderActivation(error){
-    app.innerHTML =
-      '<div class="card activation">' +
-        '<h2>🔐 Código de administrador</h2>' +
-        '<p class="hint">Ingresa el código para habilitar o cerrar la votación de cada salón.</p>' +
-        '<input id="code-input" type="password" autocomplete="off" placeholder="Código" />' +
-        '<div class="error-msg">' + (error ? esc(error) : '') + '</div>' +
-        '<button class="btn" id="enter-btn">Entrar</button>' +
-      '</div>';
-    var input = document.getElementById('code-input');
-    var btn = document.getElementById('enter-btn');
-    function tryEnter(){
-      var code = input.value.trim();
-      if(!code) return;
-      btn.disabled = true; btn.textContent = 'Verificando…';
-      sb.rpc('ecofriends_verify_admin', { p_code: code }).then(function(res){
-        btn.disabled = false; btn.textContent = 'Entrar';
-        if(res.error || !res.data){
-          document.querySelector('.error-msg').textContent = 'Código incorrecto.';
-          return;
-        }
-        localStorage.setItem(CODE_KEY, code);
-        renderPanel(code);
-      });
-    }
-    btn.addEventListener('click', tryEnter);
-    input.addEventListener('keydown', function(e){ if(e.key === 'Enter') tryEnter(); });
-    input.focus();
-  }
-
-  function renderPanel(code){
-    app.innerHTML = '<div class="card"><div class="loading">Cargando salones…</div></div>';
-    sb.from('ecofriends_grupos').select('*').order('orden').then(function(res){
-      if(res.error){
-        app.innerHTML = '<div class="card"><div class="empty-state">No se pudieron cargar los salones: ' + esc(res.error.message) + '</div></div>';
-        return;
-      }
-      var bySection = {};
-      res.data.forEach(function(g){
-        bySection[g.seccion] = bySection[g.seccion] || [];
-        bySection[g.seccion].push(g);
-      });
-
-      var html = '<div class="card"><p class="hint" style="margin-bottom:0;">' +
-        'Solo los salones marcados como abiertos pueden entrar a votar. Habilita uno a la vez a medida que el salón llega, y ciérralo de nuevo cuando termine.' +
-        '</p></div><div class="card">';
-
-      SECTIONS.forEach(function(sec){
-        var grupos = bySection[sec];
-        if(!grupos || !grupos.length) return;
-        html += '<div class="section-title">' + esc(sec) + '</div><div class="grupos-grid">';
-        grupos.forEach(function(g){
-          html += '<label class="grupo-row' + (g.voting_open ? ' open' : '') + '" data-grupo="' + esc(g.grupo) + '">' +
-            '<span class="info"><span class="name">' + esc(g.grupo) + '</span><span class="state">' + (g.voting_open ? 'Abierto' : 'Cerrado') + '</span></span>' +
-            '<span class="switch"><input type="checkbox"' + (g.voting_open ? ' checked' : '') + ' /><span class="track"></span></span>' +
-            '</label>';
-        });
-        html += '</div>';
-      });
-      html += '<div style="margin-top:20px;"><a href="#" id="logout-link" style="font-size:.82rem;font-weight:700;">Cerrar sesión de administrador</a></div>';
-      html += '</div>';
-      app.innerHTML = html;
-
-      app.querySelectorAll('.grupo-row').forEach(function(row){
-        var checkbox = row.querySelector('input');
-        checkbox.addEventListener('change', function(){
-          var grupo = row.getAttribute('data-grupo');
-          var open = checkbox.checked;
-          checkbox.disabled = true;
-          sb.rpc('ecofriends_set_voting', { p_grupo: grupo, p_open: open, p_code: code }).then(function(res){
-            checkbox.disabled = false;
-            if(res.error || !res.data){
-              checkbox.checked = !open;
-              showToast('No se pudo actualizar ' + grupo, true);
-              return;
-            }
-            row.classList.toggle('open', open);
-            row.querySelector('.state').textContent = open ? 'Abierto' : 'Cerrado';
-            showToast(grupo + (open ? ' habilitado ✓' : ' cerrado'));
-          });
-        });
-      });
-
-      document.getElementById('logout-link').addEventListener('click', function(e){
-        e.preventDefault();
-        localStorage.removeItem(CODE_KEY);
-        renderActivation();
-      });
-    });
-  }
-
-  init();
-})();
-</script>
+<script src="report.js"></script>
+<script src="admin.js"></script>
 </body>
 </html>

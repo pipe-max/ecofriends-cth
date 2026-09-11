@@ -1,0 +1,44 @@
+-- Run inside a transaction and ROLLBACK. Fixture votes never become visible.
+update ecofriends_private.settings set code_hash=extensions.crypt('test-admin',extensions.gen_salt('bf',4));
+insert into ecofriends_private.sessions(token_hash,expires_at) values(encode(extensions.digest('ecofriends-transaction-test','sha256'),'hex'),now()+interval '1 minute');
+set local role anon;
+do $$
+declare token text:='ecofriends-transaction-test'; candidate bigint; grp text; request uuid:=gen_random_uuid(); second uuid:=gen_random_uuid(); value jsonb; denied boolean:=false;
+begin
+  if (public.ecofriends_login(null)->>'error') is null then raise exception 'NULL login accepted'; end if;
+  if (public.ecofriends_login('wrong-code-for-test')->>'error') is null then raise exception 'Invalid login accepted'; end if;
+  begin perform public.ecofriends_admin_snapshot(null); exception when insufficient_privilege then denied:=true; end;
+  if not denied then raise exception 'NULL admin token accepted'; end if;
+  if has_table_privilege('anon','public.ecofriends_resultados','SELECT') or has_table_privilege('anon','public.ecofriends_votos','INSERT') then raise exception 'Public results or writes still enabled'; end if;
+  value:=public.ecofriends_login('test-admin');
+  if value->>'token' is null then raise exception 'Correct login rejected'; end if;
+  perform public.ecofriends_admin_snapshot(value->>'token');
+  select id,grupo into candidate,grp from public.ecofriends_candidatos order by id limit 1;
+  perform public.ecofriends_admin_set_group(token,grp,true);
+  value:=public.ecofriends_cast_vote(request,candidate,'shared-test-device');
+  if value->>'status'<>'saved' then raise exception 'Vote failed'; end if;
+  value:=public.ecofriends_cast_vote(request,candidate,'shared-test-device');
+  if value->>'status'<>'saved' then raise exception 'Retry failed'; end if;
+  value:=public.ecofriends_cast_vote(second,candidate,'shared-test-device');
+  if value->>'status'<>'saved' then raise exception 'Next student on same device blocked'; end if;
+  denied:=false;
+  begin perform public.ecofriends_admin_set_group(token,(select grupo from public.ecofriends_grupos where grupo<>grp limit 1),true); exception when raise_exception then denied:=true; end;
+  if not denied then raise exception 'Two groups could be opened'; end if;
+  denied:=false;
+  begin perform public.ecofriends_admin_report(token); exception when raise_exception then denied:=true; end;
+  if not denied then raise exception 'Final report accepted with open group'; end if;
+  perform public.ecofriends_admin_set_group(token,grp,false);
+  if public.ecofriends_cast_vote(request,candidate,'shared-test-device')->>'status'<>'saved' then raise exception 'Saved vote retry after closure failed'; end if;
+  if public.ecofriends_cast_vote(gen_random_uuid(),candidate,'shared-test-device')->>'status'<>'closed' then raise exception 'Closed group accepted new vote'; end if;
+  if public.ecofriends_cast_vote(request,candidate,'another-device')->>'status'<>'conflict' then raise exception 'Conflicting request accepted'; end if;
+  value:=public.ecofriends_admin_report(token);
+  if value->>'report_id' is null or jsonb_array_length(value->'groups')<>29 or jsonb_array_length(value->'decided')<>1 then raise exception 'Incomplete report'; end if;
+  perform public.ecofriends_logout(token);
+  denied:=false;
+  begin perform public.ecofriends_admin_snapshot(token); exception when insufficient_privilege then denied:=true; end;
+  if not denied then raise exception 'Logged-out session accepted'; end if;
+end $$;
+reset role;
+do $$ begin
+  if (select count(*) from public.ecofriends_votos where dispositivo_id='shared-test-device')<>2 then raise exception 'Duplicate or missing votes'; end if;
+end $$;
