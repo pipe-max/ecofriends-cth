@@ -8,7 +8,15 @@
     let html='<h2>'+(final?'Informe final de votación':'Resultados para administración')+'</h2><p class="report-meta">Ecofriends 2026–2027 · Colegio Theodoro Herzl<br>Corte: '+esc(date(data.generated_at))+' (Colombia)<br>Total de votos: <strong>'+total+'</strong>'+(final?'<br>Informe: '+esc(data.report_id):'')+'</p>';
     sections.forEach(section=>{
       html+='<h2 class="report-section">'+esc(section)+'</h2>';
-      data.groups.filter(g=>g.seccion===section).forEach(g=>{
+      const voted=data.groups.filter(g=>g.seccion===section).map(g=>({orden:g.orden,decided:false,g}));
+      const decided=(data.decided||[]).filter(g=>g.seccion===section).map(g=>({orden:g.orden,decided:true,g}));
+      voted.concat(decided).sort((a,b)=>a.orden-b.orden).forEach(entry=>{
+        if(entry.decided){
+          const g=entry.g;
+          html+='<article class="report-group"><h3>'+esc(g.grupo)+'</h3><p class="report-winner">'+esc(g.nombre)+'</p><p>Designado sin votación. No se asignan votos ni porcentajes.</p></article>';
+          return;
+        }
+        const g=entry.g;
         const count=Number(g.total);
         const max=Math.max(0,...g.candidates.map(c=>Number(c.votos)));
         const winners=g.candidates.filter(c=>Number(c.votos)===max && max>0);
@@ -18,7 +26,6 @@
         g.candidates.forEach(c=>{html+='<tr><td>'+esc(c.nombre)+'</td><td>'+Number(c.votos)+'</td><td>'+(count?(Number(c.votos)*100/count).toFixed(1):'0.0')+' %</td></tr>';});
         html+='</tbody></table><p class="report-winner">'+(!count?'Sin votos; no hay ganador.':winners.length>1?'Empate: '+winners.map(c=>esc(c.nombre)).join(' · '):(final?'Ganador: ':'Mayor votación: ')+esc(winners[0].nombre))+'</p></article>';
       });
-      (data.decided||[]).filter(g=>g.seccion===section).forEach(g=>{html+='<article class="report-group"><h3>'+esc(g.grupo)+'</h3><p class="report-winner">'+esc(g.nombre)+'</p><p>Designado sin votación. No se asignan votos ni porcentajes.</p></article>';});
     });
     return html;
   }
