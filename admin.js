@@ -46,7 +46,7 @@
     catch(error){handle(error);if(token){app.innerHTML='<div class="card"><p>No se pudo cargar el panel.</p><button class="btn" id="reload-panel">Volver a intentar</button></div>';document.getElementById('reload-panel').onclick=loadPanel;}}
   }
   function renderPanel(){
-    app.innerHTML='<div class="card"><h2>Jornada de votación</h2><p class="hint">Abre los salones que necesites o habilita todos de una vez. Al terminar, revisa los totales y ciérralos.</p><div id="sync-status" role="status"></div><div class="session-actions" role="group" aria-label="Control de la jornada"><button class="btn action-tile" id="open-all"><span class="action-symbol" aria-hidden="true">↗</span><span>Abrir todos<span class="action-caption">Habilitar la votación</span></span></button><button class="btn danger action-tile" id="close-all"><span class="action-symbol" aria-hidden="true">□</span><span>Cerrar todos<span class="action-caption">Finalizar la votación</span></span></button><button class="btn secondary action-tile" id="final-report"><span class="action-symbol" aria-hidden="true">↓</span><span>Generar informe final / PDF<span class="action-caption">Consultar y guardar resultados</span></span></button></div><div class="session-tools" role="group" aria-label="Herramientas del panel"><button class="btn secondary" id="refresh">Actualizar</button><a class="btn secondary" id="go-vote" href="index.html" target="_blank" rel="noopener">Ir a votar <span aria-hidden="true">↗</span></a><button class="btn secondary" id="logout">Cerrar sesión</button></div><div id="saved-reports"></div></div><div class="card" id="groups"></div><details class="card"><summary>Consultar resultados por candidato</summary><div id="live-results"></div></details>';
+    app.innerHTML='<div class="card"><h2>Jornada de votación</h2><p class="hint">Abre los salones que necesites o habilita todos de una vez. Al terminar, revisa los totales y ciérralos.</p><div id="sync-status" role="status"></div><div class="session-actions" role="group" aria-label="Control de la jornada"><button class="btn action-tile" id="open-all"><span class="action-symbol" aria-hidden="true">↗</span><span>Abrir todos<span class="action-caption">Habilitar la votación</span></span></button><button class="btn danger action-tile" id="close-all"><span class="action-symbol" aria-hidden="true">□</span><span>Cerrar todos<span class="action-caption">Finalizar la votación</span></span></button><button class="btn secondary action-tile" id="final-report"><span class="action-symbol" aria-hidden="true">↓</span><span>Generar informe final / PDF<span class="action-caption">Consultar y guardar resultados</span></span></button></div><div class="session-tools" role="group" aria-label="Herramientas del panel"><button class="btn secondary" id="refresh">Actualizar</button><a class="btn secondary" id="go-vote" href="index.html" target="_blank" rel="noopener">Ir a votar</a><button class="btn reset-election" id="reset-election">Reiniciar votación</button><button class="btn secondary" id="logout">Cerrar sesión</button></div><div id="saved-reports"></div></div><div class="card" id="groups"></div><details class="card"><summary>Consultar resultados por candidato</summary><div id="live-results"></div></details>';
     ['Preescolar','Primaria','Bachillerato'].forEach(section=>{
       const block=document.createElement('section');block.innerHTML='<h2 class="section-title">'+esc(section)+'</h2>';
       const grid=document.createElement('div');grid.className='admin-groups-grid';block.appendChild(grid);
@@ -88,6 +88,13 @@
     document.getElementById('refresh').onclick=()=>refresh();
     document.getElementById('open-all').onclick=async()=>{if(await confirmDialog('¿Abrir todos los salones, incluidos los finalizados? Se conservarán todos los votos registrados.',{confirmLabel:'Abrir todos'}))action(async()=>{await rpc('ecofriends_admin_open_all');toast('Todos los salones están habilitados.');});};
     document.getElementById('close-all').onclick=async()=>{if(await confirmDialog('¿Cerrar todos los salones? Confirma que los puestos terminaron de guardar.',{danger:true,confirmLabel:'Cerrar todos'}))action(async()=>{await rpc('ecofriends_admin_close_all');toast('Todos los salones están cerrados.');});};
+    document.getElementById('reset-election').onclick=async()=>{
+      if(snapshot.groups.some(g=>g.voting_open)){toast('Cierra todos los salones antes de reiniciar.',true);return;}
+      const total=snapshot.groups.reduce((sum,g)=>sum+Number(g.total||0),0);
+      if(!await confirmDialog('Vas a borrar permanentemente los '+total+' votos registrados y las cantidades esperadas de todos los salones. Los informes guardados se conservarán.\n\nHazlo únicamente cuando ya hayas generado el informe final.',{danger:true,confirmLabel:'Continuar'}))return;
+      if(!await confirmDialog('Esta acción no se puede deshacer. ¿Confirmas que deseas preparar una votación nueva?',{danger:true,confirmLabel:'Sí, borrar todos los votos'}))return;
+      action(async()=>{const deleted=await rpc('ecofriends_admin_reset_election');toast('Votación reiniciada: '+deleted+' votos eliminados.');});
+    };
     document.getElementById('final-report').onclick=async()=>{
       const issues=snapshot.groups.filter(g=>!g.completed_at || (g.expected_voters!==null && Number(g.total)!==Number(g.expected_voters)));
       if(issues.length && !await confirmDialog('Hay '+issues.length+' salones pendientes o con diferencias de participación. El informe los señalará. ¿Generarlo de todos modos?',{confirmLabel:'Generar de todos modos'}))return;
@@ -111,6 +118,7 @@
       row.querySelector('form button').disabled=busy;
     });
     document.getElementById('final-report').disabled=busy||open.length>0;
+    document.getElementById('reset-election').disabled=busy||open.length>0;
     document.getElementById('close-all').disabled=busy||open.length===0;
     document.getElementById('open-all').disabled=busy||open.length===snapshot.groups.length;
     document.getElementById('live-results').innerHTML=window.EcoReport.markup(snapshot,false);

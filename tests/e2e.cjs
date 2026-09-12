@@ -23,6 +23,10 @@ async function route(request){
   if(name==='ecofriends_admin_set_expected'){groups.find(g=>g.grupo===payload.p_grupo).expected_voters=payload.p_expected;return json(true);}
   if(name==='ecofriends_admin_open_all'){groups.forEach(g=>{g.voting_open=true;g.completed_at=null;});return json(true);}
   if(name==='ecofriends_admin_close_all'){groups.forEach(g=>{if(g.voting_open)g.completed_at=new Date().toISOString();g.voting_open=false;});return json(true);}
+  if(name==='ecofriends_admin_reset_election'){
+   if(groups.some(g=>g.voting_open))return json({message:'Cierra todos los salones antes de reiniciar la votación.'},400);
+   const deleted=votes.size;votes.clear();groups.forEach(g=>{g.voting_open=false;g.completed_at=null;g.expected_voters=null;});return json(deleted);
+  }
   if(name==='ecofriends_admin_report'){
    if(payload.p_report_id)return json(reports.find(r=>r.report_id===payload.p_report_id));
    if(groups.some(g=>g.voting_open))return json({message:'Cierra todos los salones'},400);
@@ -97,6 +101,9 @@ async function route(request){
  const frozen=await admin.locator('#app .card').innerText();votes.clear();await admin.waitForTimeout(3300);assert.equal(await admin.locator('#app .card').innerText(),frozen);
  await admin.locator('#back-panel').click();await admin.locator('#groups').waitFor();await admin.setViewportSize({width:390,height:844});await admin.screenshot({path:output+'/admin-mobile.png',fullPage:true});
  assert.equal(await admin.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+ await admin.locator('#reset-election').click();await admin.locator('.modal-confirm').click();await admin.locator('.modal-confirm').click();
+ await admin.waitForFunction(()=>[...document.querySelectorAll('.participation')].every(node=>node.textContent.startsWith('0 votos')));
+ assert.equal(votes.size,0);assert.ok(groups.every(g=>g.completed_at===null&&g.expected_voters===null&&!g.voting_open));
  await admin.locator('#logout').click();await admin.locator('#code-input').waitFor();assert.equal(await admin.locator('#live-results').count(),0);
  console.log('PASS: admin counter/expected/save/close, private results, frozen report with K5 Bet, PDF, mobile width and logout.');
  assert.deepEqual(errors,[]);console.log('PASS: no JavaScript errors. Artifacts: '+output);
