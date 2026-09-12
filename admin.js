@@ -29,7 +29,7 @@
     catch(error){handle(error);if(token){app.innerHTML='<div class="card"><p>No se pudo cargar el panel.</p><button class="btn" id="reload-panel">Volver a intentar</button></div>';document.getElementById('reload-panel').onclick=loadPanel;}}
   }
   function renderPanel(){
-    app.innerHTML='<div class="card"><h2>Jornada de votación</h2><p class="hint">Abre un salón, espera a que todos terminen, revisa el total y ciérralo antes de pasar al siguiente.</p><div id="sync-status" role="status"></div><div class="toolbar"><button class="btn secondary" id="refresh">Actualizar</button><button class="btn danger" id="close-all">Cerrar todos</button><button class="btn" id="final-report">Generar informe final / PDF</button><button class="btn secondary" id="logout">Cerrar sesión</button></div><div id="saved-reports"></div></div><div class="card" id="groups"></div><details class="card"><summary>Consultar resultados por candidato</summary><div id="live-results"></div></details>';
+    app.innerHTML='<div class="card"><h2>Jornada de votación</h2><p class="hint">Abre los salones que necesites o habilita todos de una vez. Al terminar, revisa los totales y ciérralos.</p><div id="sync-status" role="status"></div><div class="toolbar"><button class="btn secondary" id="refresh">Actualizar</button><button class="btn" id="open-all">Abrir todos</button><button class="btn danger" id="close-all">Cerrar todos</button><button class="btn" id="final-report">Generar informe final / PDF</button><button class="btn secondary" id="logout">Cerrar sesión</button></div><div id="saved-reports"></div></div><div class="card" id="groups"></div><details class="card"><summary>Consultar resultados por candidato</summary><div id="live-results"></div></details>';
     ['Preescolar','Primaria','Bachillerato'].forEach(section=>{
       const block=document.createElement('section');block.innerHTML='<h2 class="section-title">'+esc(section)+'</h2>';
       const grid=document.createElement('div');grid.className='admin-groups-grid';block.appendChild(grid);
@@ -60,6 +60,7 @@
       });document.getElementById('groups').appendChild(block);
     });
     document.getElementById('refresh').onclick=()=>refresh();
+    document.getElementById('open-all').onclick=()=>{if(window.confirm('¿Abrir todos los salones, incluidos los finalizados? Se conservarán todos los votos registrados.'))action(async()=>{await rpc('ecofriends_admin_open_all');toast('Todos los salones están habilitados.');});};
     document.getElementById('close-all').onclick=()=>{if(window.confirm('¿Cerrar todos los salones? Confirma que los puestos terminaron de guardar.'))action(async()=>{await rpc('ecofriends_admin_close_all');toast('Todos los salones están cerrados.');});};
     document.getElementById('final-report').onclick=()=>{
       const issues=snapshot.groups.filter(g=>!g.completed_at || (g.expected_voters!==null && Number(g.total)!==Number(g.expected_voters)));
@@ -71,8 +72,8 @@
   }
   function paint(){
     if(view!=='panel')return;
-    const open=snapshot.groups.find(g=>g.voting_open);
-    document.getElementById('sync-status').textContent=(open?'Abierto: '+open.grupo:'Todos los salones cerrados')+' · Actualizado '+new Date(snapshot.generated_at).toLocaleTimeString('es-CO');
+    const open=snapshot.groups.filter(g=>g.voting_open);
+    document.getElementById('sync-status').textContent=(open.length===1?'Abierto: '+open[0].grupo:open.length?'Salones abiertos: '+open.length+' de '+snapshot.groups.length:'Todos los salones cerrados')+' · Actualizado '+new Date(snapshot.generated_at).toLocaleTimeString('es-CO');
     app.querySelectorAll('.admin-group').forEach(row=>{
       const g=snapshot.groups.find(item=>item.grupo===row.dataset.group);row.classList.toggle('open',g.voting_open);
       row.querySelector('.g-status').textContent=g.voting_open?'Abierto':g.completed_at?'Finalizado':'Pendiente';
@@ -80,11 +81,12 @@
       row.querySelector('.participation').textContent=total+' votos recibidos'+(expected===null?'': ' de '+expected+' esperados'+(total<expected?' · Faltan '+(expected-total):total>expected?' · Revisar: '+(total-expected)+' de más':' · Total completo'));
       row.querySelector('.participation').classList.toggle('mismatch',expected!==null && total>expected);
       const input=row.querySelector('input');if(document.activeElement!==input && !input.dataset.dirty) input.value=expected===null?'':expected;
-      const button=row.querySelector('.group-control');button.textContent=g.voting_open?'Cerrar salón':g.completed_at?'Reabrir salón':'Abrir salón';button.disabled=busy || !!(open && open.grupo!==g.grupo);
+      const button=row.querySelector('.group-control');button.textContent=g.voting_open?'Cerrar salón':g.completed_at?'Reabrir salón':'Abrir salón';button.disabled=busy;
       row.querySelector('form button').disabled=busy;
     });
-    document.getElementById('final-report').disabled=busy||!!open;
-    document.getElementById('close-all').disabled=busy||!open;
+    document.getElementById('final-report').disabled=busy||open.length>0;
+    document.getElementById('close-all').disabled=busy||open.length===0;
+    document.getElementById('open-all').disabled=busy||open.length===snapshot.groups.length;
     document.getElementById('live-results').innerHTML=window.EcoReport.markup(snapshot,false);
     const saved=document.getElementById('saved-reports');saved.innerHTML='';
     if(snapshot.reports?.length){

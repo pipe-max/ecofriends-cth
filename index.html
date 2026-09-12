@@ -111,8 +111,9 @@
   .section-block h2{font-size:1.4rem;margin-bottom:16px;}
 
   /* ---------- Groups grid ---------- */
-  .groups-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;justify-items:stretch;}
+  .groups-grid{display:flex;flex-wrap:wrap;gap:12px;justify-content:center;--group-columns:6;}
   .group-card{
+    flex:0 0 calc((100% - (var(--group-columns) - 1)*12px)/var(--group-columns));min-width:0;
     border:2.5px solid var(--ink);background:var(--surface);border-radius:var(--radius-md);
     padding:16px 14px;cursor:pointer;font-family:inherit;text-align:left;transition:.16s var(--bounce);
     box-shadow:var(--sticker-sm);position:relative;
@@ -243,13 +244,15 @@
   }
 
   @media (max-width:820px){
-    .groups-grid{grid-template-columns:repeat(3,minmax(0,1fr));}
+    .groups-grid{--group-columns:3;}
   }
   @media (max-width:640px){
     .site-header{padding:26px 0 30px;}
     .hero{padding:20px 18px;}
-    .groups-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+    .groups-grid{--group-columns:2;}
     .candidate-btn{width:130px;}
+    .candidate-btn .cand-name{color:#fff;-webkit-text-fill-color:#fff;}
+    .candidate-btn:hover{background:var(--leaf-deep);}
     .avatar{width:90px;height:90px;}
     .bar-row .name{width:120px;}
   }

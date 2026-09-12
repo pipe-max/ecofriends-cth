@@ -21,9 +21,14 @@ begin
   if value->>'status'<>'saved' then raise exception 'Retry failed'; end if;
   value:=public.ecofriends_cast_vote(second,candidate,'shared-test-device');
   if value->>'status'<>'saved' then raise exception 'Next student on same device blocked'; end if;
+  perform public.ecofriends_admin_set_group(token,(select grupo from public.ecofriends_grupos where grupo<>grp limit 1),true);
+  if (select count(*) from public.ecofriends_grupos where voting_open)<2 then raise exception 'Multiple groups not opened'; end if;
   denied:=false;
-  begin perform public.ecofriends_admin_set_group(token,(select grupo from public.ecofriends_grupos where grupo<>grp limit 1),true); exception when raise_exception then denied:=true; end;
-  if not denied then raise exception 'Two groups could be opened'; end if;
+  begin perform public.ecofriends_admin_open_all(null); exception when insufficient_privilege then denied:=true; end;
+  if not denied then raise exception 'Unauthenticated open all accepted'; end if;
+  perform public.ecofriends_admin_close_all(token);
+  perform public.ecofriends_admin_open_all(token);
+  if exists(select 1 from public.ecofriends_grupos where not voting_open or completed_at is not null) then raise exception 'Open all incomplete'; end if;
   denied:=false;
   begin perform public.ecofriends_admin_report(token); exception when raise_exception then denied:=true; end;
   if not denied then raise exception 'Final report accepted with open group'; end if;
@@ -31,6 +36,7 @@ begin
   if public.ecofriends_cast_vote(request,candidate,'shared-test-device')->>'status'<>'saved' then raise exception 'Saved vote retry after closure failed'; end if;
   if public.ecofriends_cast_vote(gen_random_uuid(),candidate,'shared-test-device')->>'status'<>'closed' then raise exception 'Closed group accepted new vote'; end if;
   if public.ecofriends_cast_vote(request,candidate,'another-device')->>'status'<>'conflict' then raise exception 'Conflicting request accepted'; end if;
+  perform public.ecofriends_admin_close_all(token);
   value:=public.ecofriends_admin_report(token);
   if value->>'report_id' is null or jsonb_array_length(value->'groups')<>29 or jsonb_array_length(value->'decided')<>1 then raise exception 'Incomplete report'; end if;
   perform public.ecofriends_logout(token);
