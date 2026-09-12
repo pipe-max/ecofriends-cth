@@ -144,18 +144,19 @@
     document.getElementById('pending-title').focus();
     document.getElementById('retry-vote').addEventListener('click',()=>withVoteLock(sendPending));
   }
+  async function continueAfterVote(){
+    const pending=readPending();
+    if(pending && pending.status!=='saved') return showPending();
+    localStorage.removeItem(PENDING_KEY);
+    await syncGroups();
+    if(!state.loaded) return load();
+    state.view=state.gruposAbiertos[state.group]?'ballot':'home';render();
+  }
   function showSaved(){
     closeModal();state.view='success';
     app.innerHTML='<div class="thanks"><div class="big-check">✓</div><h2 id="vote-success-title" tabindex="-1">¡Voto registrado!</h2><p>Gracias por participar. Tu voto ya quedó guardado.<br>Pulsa Aceptar cuando sea el turno del siguiente estudiante.</p><button type="button" class="btn-confirm btn-next-vote" id="next-vote">Aceptar y continuar con el siguiente voto</button></div>';
     document.getElementById('vote-success-title').focus();
-    document.getElementById('next-vote').addEventListener('click',()=>withVoteLock(async()=>{
-      const pending=readPending();
-      if(pending && pending.status!=='saved') return showPending();
-      localStorage.removeItem(PENDING_KEY);
-      await syncGroups();
-      if(!state.loaded) return load();
-      state.view=state.gruposAbiertos[state.group]?'ballot':'home';render();
-    }));
+    document.getElementById('next-vote').addEventListener('click',()=>withVoteLock(continueAfterVote));
   }
   async function withVoteLock(action){
     if(state.sending) return;
@@ -243,7 +244,8 @@
     }
   }
   document.getElementById('nav-vote').addEventListener('click',()=>{
-    if(state.sending || ['success','pending','blocked'].includes(state.view)) return;
+    if(state.sending || ['pending','blocked'].includes(state.view)) return;
+    if(state.view==='success') return withVoteLock(continueAfterVote);
     closeModal();state.view='home';render();syncGroups();
   });
   window.addEventListener('storage',event=>{
