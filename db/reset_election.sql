@@ -12,7 +12,8 @@ begin
   delete from public.ecofriends_votos where id is not null;
   get diagnostics deleted_count = row_count;
   update public.ecofriends_grupos
-    set voting_open=false, completed_at=null, expected_voters=null;
+    set voting_open=false, completed_at=null, expected_voters=null
+    where grupo is not null;
   insert into ecofriends_private.audit(action,detail)
     values('reset_election',jsonb_build_object('deleted',deleted_count));
   return deleted_count;
