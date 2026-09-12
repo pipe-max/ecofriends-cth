@@ -106,7 +106,8 @@
   .toolbar .btn,.group-control{width:auto;}
   .btn.secondary{background:var(--surface-2);color:var(--ink);}
   .btn.danger{background:var(--danger);}
-  .admin-group{padding:16px;border:2px solid var(--line);border-radius:14px;margin:10px 0;display:grid;grid-template-columns:1fr auto;gap:10px;}
+  .admin-groups-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;}
+  .admin-group{padding:16px;border:2px solid var(--line);border-radius:14px;margin:0;display:grid;grid-template-columns:1fr auto;gap:10px;}
   .group-buttons{display:flex;flex-direction:column;gap:8px;align-items:stretch;}
   .group-buttons .btn{width:auto;white-space:nowrap;}
   .group-reset{font-size:.8rem;padding:8px 16px;}
