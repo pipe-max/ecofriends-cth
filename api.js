@@ -24,7 +24,7 @@
   window.EcoAPI = {
     rpc:(name, args) => request('rpc/' + name, args),
     candidates:() => request('ecofriends_candidatos?select=id,nombre,foto_url,grupo,seccion,orden&order=orden'),
-    groups:() => request('ecofriends_grupos?select=grupo,voting_open,completed_at&order=orden'),
+    groups:() => request('rpc/ecofriends_public_groups', {}),
     esc:value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))
   };
 })();

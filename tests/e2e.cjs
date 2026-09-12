@@ -11,6 +11,7 @@ async function route(request){
  const json=(data,status=200)=>request.fulfill({status,contentType:'application/json',body:JSON.stringify(data)});
  if(name==='ecofriends_candidatos')return json(candidates);
  if(name==='ecofriends_grupos')return json(groups);
+ if(name==='ecofriends_public_groups')return json(groups.map(g=>({...g,total:[...votes.values()].filter(v=>v.grupo===g.grupo).length})));
  if(name==='ecofriends_login')return json(payload.p_code==='test-admin'?{token:'test-session'}:{error:'Código incorrecto.'});
  if(name.startsWith('ecofriends_admin') || name==='ecofriends_logout'){
   if(payload.p_token!=='test-session'||!validToken)return json({code:'42501',message:'Sesión vencida'},403);

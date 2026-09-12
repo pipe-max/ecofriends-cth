@@ -71,9 +71,10 @@
           html += '<div class="group-card locked"><span class="g">' + esc(g) + '</span>' +
             '<span class="c">🔒 ' + (state.groups.find(function(item){return item.grupo===g;})?.completed_at ? 'Finalizado' : 'Aún no abre') + '</span></div>';
         } else {
-          var count = state.allCandidates.filter(function(c){ return c.grupo === g; }).length;
+          var groupInfo = state.groups.find(function(item){ return item.grupo === g; });
+          var count = Number(groupInfo && groupInfo.total || 0);
           html += '<button class="group-card" data-section="' + s.id + '" data-group="' + esc(g) + '">' +
-            '<span class="g">' + esc(g) + '</span><span class="c">' + count + ' candidatos</span></button>';
+            '<span class="g">' + esc(g) + '</span><span class="c">' + count + (count===1?' voto recibido':' votos recibidos') + '</span></button>';
         }
       });
       html += '</div></div>';
