@@ -8,7 +8,8 @@ begin
   if exists(select 1 from public.ecofriends_grupos where voting_open) then
     raise exception 'Cierra todos los salones antes de reiniciar la votación.';
   end if;
-  delete from public.ecofriends_votos;
+  -- An explicit predicate satisfies pg-safeupdate while still clearing every vote.
+  delete from public.ecofriends_votos where id is not null;
   get diagnostics deleted_count = row_count;
   update public.ecofriends_grupos
     set voting_open=false, completed_at=null, expected_voters=null;
