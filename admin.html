@@ -122,6 +122,23 @@
 
   .toolbar{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0;align-items:center;}
   .toolbar .btn{width:auto;flex:0 0 auto;white-space:nowrap;padding:7px 12px;font-size:.74rem;border-width:2px;box-shadow:var(--sticker-sm);}
+  .session-actions{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:20px 0 24px;}
+  .session-actions .action-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-height:148px;padding:20px 12px;border-radius:18px;font-size:1.1rem;line-height:1.25;text-align:center;}
+  .action-symbol{display:flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:12px;background:rgba(255,255,255,.2);font-family:system-ui,sans-serif;font-size:1.5rem;line-height:1;}
+  .secondary .action-symbol{background:var(--leaf-soft);color:var(--leaf-deep);}
+  .action-caption{display:block;margin-top:6px;font-family:'Nunito',system-ui,sans-serif;font-size:.78rem;font-weight:700;line-height:1.4;}
+  .session-tools{display:flex;align-items:center;flex-wrap:wrap;gap:12px;border-top:1px solid var(--line);padding-top:20px;margin-bottom:4px;}
+  .session-tools .btn{width:auto;min-height:46px;padding:10px 20px;font-size:.95rem;}
+  .session-tools #logout{margin-left:auto;background:var(--surface);}
+  @media(max-width:600px){
+    .session-actions{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
+    .session-actions .action-tile{min-height:132px;padding:16px 10px;font-size:1rem;}
+    .session-actions #final-report{grid-column:1 / -1;flex-direction:row;min-height:94px;gap:16px;}
+    .session-tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));}
+    .session-tools .btn{width:100%;padding:10px 8px;}
+    .session-tools #logout{grid-column:1 / -1;margin-left:0;}
+  }
+  @media(prefers-reduced-motion:reduce){.session-actions .btn,.session-tools .btn{transition:none;}}
   .group-control{width:auto;}
   .btn.secondary{background:var(--surface-2);color:var(--ink);}
   .btn.danger{background:var(--danger);}
