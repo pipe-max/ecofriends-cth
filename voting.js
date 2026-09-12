@@ -144,13 +144,13 @@
     document.getElementById('pending-title').focus();
     document.getElementById('retry-vote').addEventListener('click',()=>withVoteLock(sendPending));
   }
-  async function continueAfterVote(){
+  async function continueAfterVote(forceHome){
     const pending=readPending();
     if(pending && pending.status!=='saved') return showPending();
     localStorage.removeItem(PENDING_KEY);
     await syncGroups();
     if(!state.loaded) return load();
-    state.view=state.gruposAbiertos[state.group]?'ballot':'home';render();
+    state.view=(!forceHome && state.gruposAbiertos[state.group])?'ballot':'home';render();
   }
   function showSaved(){
     closeModal();state.view='success';
@@ -245,7 +245,7 @@
   }
   document.getElementById('nav-vote').addEventListener('click',()=>{
     if(state.sending || ['pending','blocked'].includes(state.view)) return;
-    if(state.view==='success') return withVoteLock(continueAfterVote);
+    if(state.view==='success') return withVoteLock(()=>continueAfterVote(true));
     closeModal();state.view='home';render();syncGroups();
   });
   window.addEventListener('storage',event=>{
