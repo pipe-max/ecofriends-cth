@@ -117,7 +117,18 @@
     const saved=document.getElementById('saved-reports');saved.innerHTML='';
     if(snapshot.reports?.length){
       const label=document.createElement('p');label.textContent='Informes guardados:';saved.appendChild(label);
-      snapshot.reports.forEach(report=>{const button=document.createElement('button');button.className='btn secondary';button.textContent=window.EcoReport.date(report.created_at);button.style.marginBottom='8px';button.onclick=()=>action(async()=>showReport(await rpc('ecofriends_admin_report',{p_report_id:report.id})));saved.appendChild(button);});
+      snapshot.reports.forEach(report=>{
+        const label=window.EcoReport.date(report.created_at);
+        const row=document.createElement('div');row.className='report-row';
+        const button=document.createElement('button');button.className='btn secondary';button.textContent=label;
+        button.onclick=()=>action(async()=>showReport(await rpc('ecofriends_admin_report',{p_report_id:report.id})));
+        const del=document.createElement('button');del.type='button';del.className='btn danger report-delete';del.textContent='✕';del.setAttribute('aria-label','Borrar informe del '+label);
+        del.onclick=async()=>{
+          if(!await confirmDialog('¿Borrar el informe del '+label+'? Esta acción no se puede deshacer.',{danger:true,confirmLabel:'Borrar informe'}))return;
+          action(async()=>{await rpc('ecofriends_admin_delete_report',{p_report_id:report.id});toast('Informe eliminado.');});
+        };
+        row.appendChild(button);row.appendChild(del);saved.appendChild(row);
+      });
     }
   }
   async function refresh(force=false){
