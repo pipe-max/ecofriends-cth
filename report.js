@@ -5,7 +5,7 @@
   function date(value){return new Date(value).toLocaleString('es-CO',{timeZone:'America/Bogota',dateStyle:'long',timeStyle:'short'});}
   function markup(data,final){
     const total=data.groups.reduce((sum,g)=>sum+Number(g.total),0);
-    let html='<h2>'+(final?'Informe final de votación':'Resultados para administración')+'</h2><p class="report-meta">Ecofriends 2026–2027 · Colegio Theodoro Herzl<br>Corte: '+esc(date(data.generated_at))+' (Colombia)<br>Total de votos: <strong>'+total+'</strong>'+(final?'<br>Informe: '+esc(data.report_id):'')+'</p>';
+    let html='<div class="report-header"><div><h2>'+(final?'Informe final de votación':'Resultados para administración')+'</h2><p class="report-meta">Ecofriends 2026–2027 · Colegio Theodoro Herzl<br>Corte: '+esc(date(data.generated_at))+' (Colombia)<br>Total de votos: <strong>'+total+'</strong>'+(final?'<br>Informe: '+esc(data.report_id):'')+'</p></div><img src="theo.png" alt="Ecofriends" class="report-logo"></div>';
     sections.forEach(section=>{
       html+='<h2 class="report-section">'+esc(section)+'</h2>';
       const voted=data.groups.filter(g=>g.seccion===section).map(g=>({orden:g.orden,decided:false,g}));
