@@ -18,12 +18,13 @@
         }
         const g=entry.g;
         const count=Number(g.total);
-        const max=Math.max(0,...g.candidates.map(c=>Number(c.votos)));
-        const winners=g.candidates.filter(c=>Number(c.votos)===max && max>0);
+        const candidates=[...g.candidates].sort((a,b)=>Number(b.votos)-Number(a.votos)||Number(a.orden)-Number(b.orden));
+        const max=Math.max(0,...candidates.map(c=>Number(c.votos)));
+        const winners=candidates.filter(c=>Number(c.votos)===max && max>0);
         html+='<article class="report-group"><h3>'+esc(g.grupo)+'</h3><p>'+count+' votos recibidos · '+(g.voting_open?'Abierto':g.completed_at?'Finalizado':'Pendiente / cerrado')+(g.expected_voters===null?' · Cantidad esperada sin definir':' · Esperados: '+Number(g.expected_voters))+'</p>';
         if(g.expected_voters!==null && count!==Number(g.expected_voters)) html+='<p class="mismatch">Revisar participación: diferencia de '+Math.abs(count-Number(g.expected_voters))+' respecto a lo esperado.</p>';
         html+='<table class="report-table"><thead><tr><th>Candidato</th><th>Votos</th><th>%</th></tr></thead><tbody>';
-        g.candidates.forEach(c=>{html+='<tr><td>'+esc(c.nombre)+'</td><td>'+Number(c.votos)+'</td><td>'+(count?(Number(c.votos)*100/count).toFixed(1):'0.0')+' %</td></tr>';});
+        candidates.forEach(c=>{html+='<tr><td>'+esc(c.nombre)+'</td><td>'+Number(c.votos)+'</td><td>'+(count?(Number(c.votos)*100/count).toFixed(1):'0.0')+' %</td></tr>';});
         html+='</tbody></table><p class="report-winner">'+(!count?'Sin votos; no hay ganador.':winners.length>1?'Empate: '+winners.map(c=>esc(c.nombre)).join(' · '):(final?'Ganador: ':'Mayor votación: ')+esc(winners[0].nombre))+'</p></article>';
       });
     });
