@@ -5,6 +5,23 @@
   let token=null,snapshot=null,busy=false,refreshing=false,view='login',generation=0;
   try{token=sessionStorage.getItem(SESSION_KEY);localStorage.removeItem('ecofriends_admin_code');}catch(error){}
   function toast(message,error=false){const element=document.getElementById('toast');element.textContent=message;element.className='toast show'+(error?' error':'');setTimeout(()=>element.className='toast',4000);}
+  function confirmDialog(message,{danger=false,confirmLabel='Confirmar',cancelLabel='Cancelar'}={}){
+    return new Promise(resolve=>{
+      const overlay=document.createElement('div');overlay.className='modal-overlay';
+      overlay.innerHTML='<div class="modal-box" role="alertdialog" aria-modal="true"><p class="modal-message"></p><div class="modal-actions"><button class="btn secondary modal-cancel" type="button"></button><button class="btn modal-confirm" type="button"></button></div></div>';
+      overlay.querySelector('.modal-message').textContent=message;
+      const confirmButton=overlay.querySelector('.modal-confirm');confirmButton.textContent=confirmLabel;if(danger)confirmButton.classList.add('danger');
+      overlay.querySelector('.modal-cancel').textContent=cancelLabel;
+      function close(result){overlay.remove();document.removeEventListener('keydown',onKey);resolve(result);}
+      function onKey(event){if(event.key==='Escape')close(false);}
+      overlay.querySelector('.modal-cancel').onclick=()=>close(false);
+      confirmButton.onclick=()=>close(true);
+      overlay.addEventListener('mousedown',event=>{if(event.target===overlay)close(false);});
+      document.addEventListener('keydown',onKey);
+      document.body.appendChild(overlay);
+      confirmButton.focus();
+    });
+  }
   function forget(){token=null;generation++;try{sessionStorage.removeItem(SESSION_KEY);}catch(error){};document.body.classList.remove('printing-report');login();}
   function handle(error){if(error.code==='42501'){forget();toast('La sesión venció. Ingresa de nuevo.',true);}else toast(error.message||'Revisa la conexión e intenta de nuevo.',true);}
   async function rpc(name,args={}){return api.rpc(name,{p_token:token,...args});}
@@ -52,29 +69,29 @@
           if(count!==null && (!Number.isInteger(count)||count<0||count>500))return toast('Escribe una cantidad entre 0 y 500.',true);
           action(async()=>{await rpc('ecofriends_admin_set_expected',{p_grupo:g.grupo,p_expected:count});delete input.dataset.dirty;toast('Cantidad guardada.');});
         });
-        row.querySelector('.group-control').addEventListener('click',()=>{
+        row.querySelector('.group-control').addEventListener('click',async()=>{
           const current=snapshot.groups.find(item=>item.grupo===g.grupo);
           if(current.voting_open){
             const expected=current.expected_voters===null?'sin cantidad esperada definida':current.expected_voters+' esperados';
-            if(!window.confirm('Cerrar '+g.grupo+': '+current.total+' votos recibidos, '+expected+'. Confirma que todos los puestos terminaron de guardar.'))return;
-          }else if(current.completed_at && !window.confirm(g.grupo+' ya fue finalizado. ¿Reabrirlo conservando sus votos?'))return;
+            if(!await confirmDialog('Cerrar '+g.grupo+': '+current.total+' votos recibidos, '+expected+'. Confirma que todos los puestos terminaron de guardar.',{confirmLabel:'Cerrar salón'}))return;
+          }else if(current.completed_at && !await confirmDialog(g.grupo+' ya fue finalizado. ¿Reabrirlo conservando sus votos?',{confirmLabel:'Reabrir'}))return;
           action(async()=>{await rpc('ecofriends_admin_set_group',{p_grupo:g.grupo,p_open:!current.voting_open});toast(g.grupo+(current.voting_open?' cerrado.':' habilitado.'));});
         });
-        row.querySelector('.group-reset').addEventListener('click',()=>{
+        row.querySelector('.group-reset').addEventListener('click',async()=>{
           const current=snapshot.groups.find(item=>item.grupo===g.grupo);
-          if(!window.confirm('¿Borrar los '+current.total+' votos de '+g.grupo+' y dejarlo en cero? Esta acción no se puede deshacer.'))return;
-          if(!window.confirm('Confirma otra vez: se eliminarán permanentemente '+current.total+' votos de '+g.grupo+'.'))return;
+          if(!await confirmDialog('¿Borrar los '+current.total+' votos de '+g.grupo+' y dejarlo en cero? Esta acción no se puede deshacer.',{danger:true,confirmLabel:'Borrar votos'}))return;
+          if(!await confirmDialog('Confirma otra vez: se eliminarán permanentemente '+current.total+' votos de '+g.grupo+'.',{danger:true,confirmLabel:'Sí, eliminar'}))return;
           action(async()=>{const deleted=await rpc('ecofriends_admin_reset_group',{p_grupo:g.grupo});toast(g.grupo+': '+deleted+' votos eliminados. Salón reiniciado y cerrado.');});
         });
         grid.appendChild(row);
       });document.getElementById('groups').appendChild(block);
     });
     document.getElementById('refresh').onclick=()=>refresh();
-    document.getElementById('open-all').onclick=()=>{if(window.confirm('¿Abrir todos los salones, incluidos los finalizados? Se conservarán todos los votos registrados.'))action(async()=>{await rpc('ecofriends_admin_open_all');toast('Todos los salones están habilitados.');});};
-    document.getElementById('close-all').onclick=()=>{if(window.confirm('¿Cerrar todos los salones? Confirma que los puestos terminaron de guardar.'))action(async()=>{await rpc('ecofriends_admin_close_all');toast('Todos los salones están cerrados.');});};
-    document.getElementById('final-report').onclick=()=>{
+    document.getElementById('open-all').onclick=async()=>{if(await confirmDialog('¿Abrir todos los salones, incluidos los finalizados? Se conservarán todos los votos registrados.',{confirmLabel:'Abrir todos'}))action(async()=>{await rpc('ecofriends_admin_open_all');toast('Todos los salones están habilitados.');});};
+    document.getElementById('close-all').onclick=async()=>{if(await confirmDialog('¿Cerrar todos los salones? Confirma que los puestos terminaron de guardar.',{danger:true,confirmLabel:'Cerrar todos'}))action(async()=>{await rpc('ecofriends_admin_close_all');toast('Todos los salones están cerrados.');});};
+    document.getElementById('final-report').onclick=async()=>{
       const issues=snapshot.groups.filter(g=>!g.completed_at || (g.expected_voters!==null && Number(g.total)!==Number(g.expected_voters)));
-      if(issues.length && !window.confirm('Hay '+issues.length+' salones pendientes o con diferencias de participación. El informe los señalará. ¿Generarlo de todos modos?'))return;
+      if(issues.length && !await confirmDialog('Hay '+issues.length+' salones pendientes o con diferencias de participación. El informe los señalará. ¿Generarlo de todos modos?',{confirmLabel:'Generar de todos modos'}))return;
       action(async()=>showReport(await rpc('ecofriends_admin_report')));
     };
     document.getElementById('logout').onclick=()=>action(async()=>{await rpc('ecofriends_logout');forget();});

@@ -102,6 +102,18 @@
   .toast.show{opacity:1;}
   .toast.error{background:var(--danger);}
 
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(23,58,36,.55);display:flex;align-items:center;justify-content:center;
+    padding:20px;z-index:100;
+  }
+  .modal-box{
+    background:var(--surface);border:2.5px solid var(--ink);border-radius:var(--radius-lg);
+    box-shadow:var(--sticker);padding:22px;max-width:420px;width:100%;
+  }
+  .modal-message{margin:0 0 20px;font-weight:700;color:var(--ink);white-space:pre-line;}
+  .modal-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;}
+  .modal-actions .btn{width:auto;}
+
   .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0;align-items:center;}
   .toolbar .btn,.group-control{width:auto;}
   .btn.secondary{background:var(--surface-2);color:var(--ink);}
