@@ -19,5 +19,6 @@ create function public.ecofriends_admin_reset_group(p_token text,p_grupo text) r
 
 revoke all on function ecofriends_private.reset_group(text,text) from public,anon,authenticated;
 revoke all on function public.ecofriends_admin_reset_group(text,text) from public,anon,authenticated;
+grant execute on function ecofriends_private.reset_group(text,text) to anon,authenticated;
 grant execute on function public.ecofriends_admin_reset_group(text,text) to anon,authenticated;
 notify pgrst,'reload schema';
