@@ -33,7 +33,17 @@
     ['Preescolar','Primaria','Bachillerato'].forEach(section=>{
       const block=document.createElement('section');block.innerHTML='<h2 class="section-title">'+esc(section)+'</h2>';
       const grid=document.createElement('div');grid.className='admin-groups-grid';block.appendChild(grid);
-      snapshot.groups.filter(g=>g.seccion===section).forEach(g=>{
+      const voted=snapshot.groups.filter(g=>g.seccion===section).map(g=>({orden:g.orden,decided:false,g}));
+      const decided=(snapshot.decided||[]).filter(g=>g.seccion===section).map(g=>({orden:g.orden,decided:true,g}));
+      voted.concat(decided).sort((a,b)=>a.orden-b.orden).forEach(entry=>{
+        if(entry.decided){
+          const g=entry.g;
+          const card=document.createElement('div');card.className='admin-group decided-group';
+          card.innerHTML='<div><h3>'+esc(g.grupo)+'</h3><div class="g-status">Designado sin votación</div><p class="participation">Ganador: '+esc(g.nombre)+'</p></div>';
+          grid.appendChild(card);
+          return;
+        }
+        const g=entry.g;
         const row=document.createElement('div');row.className='admin-group';row.dataset.group=g.grupo;
         row.innerHTML='<div><h3>'+esc(g.grupo)+'</h3><div class="g-status"></div><p class="participation"></p><form class="expected-form"><span class="expected-label">Estudiantes que votarán</span><div class="expected-input-row"><input type="number" min="0" max="500" step="1" aria-label="Estudiantes esperados de '+esc(g.grupo)+'" placeholder="Sin definir"><button>Guardar cantidad</button></div></form></div><div class="group-buttons"><button class="btn group-control"></button><button class="btn danger group-reset" type="button">Reiniciar votos</button></div>';
         const input=row.querySelector('input');input.addEventListener('input',()=>input.dataset.dirty='true');
@@ -74,7 +84,7 @@
     if(view!=='panel')return;
     const open=snapshot.groups.filter(g=>g.voting_open);
     document.getElementById('sync-status').textContent=(open.length===1?'Abierto: '+open[0].grupo:open.length?'Salones abiertos: '+open.length+' de '+snapshot.groups.length:'Todos los salones cerrados')+' · Actualizado '+new Date(snapshot.generated_at).toLocaleTimeString('es-CO');
-    app.querySelectorAll('.admin-group').forEach(row=>{
+    app.querySelectorAll('.admin-group:not(.decided-group)').forEach(row=>{
       const g=snapshot.groups.find(item=>item.grupo===row.dataset.group);row.classList.toggle('open',g.voting_open);
       row.querySelector('.g-status').textContent=g.voting_open?'Abierto':g.completed_at?'Finalizado':'Pendiente';
       const total=Number(g.total),expected=g.expected_voters;
