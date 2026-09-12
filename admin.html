@@ -120,8 +120,9 @@
   .report-row .btn.secondary{flex:1;}
   .report-delete{flex:none;width:40px;height:40px;padding:0;display:flex;align-items:center;justify-content:center;font-size:1rem;line-height:1;border-radius:10px;}
 
-  .toolbar{display:flex;flex-wrap:nowrap;gap:10px;margin:14px 0;align-items:center;overflow-x:auto;}
-  .toolbar .btn,.group-control{width:auto;flex:0 0 auto;white-space:nowrap;}
+  .toolbar{display:flex;flex-wrap:wrap;gap:6px;margin:14px 0;align-items:center;}
+  .toolbar .btn{width:auto;flex:0 0 auto;white-space:nowrap;padding:7px 12px;font-size:.74rem;border-width:2px;box-shadow:var(--sticker-sm);}
+  .group-control{width:auto;}
   .btn.secondary{background:var(--surface-2);color:var(--ink);}
   .btn.danger{background:var(--danger);}
   .admin-groups-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:10px;}
