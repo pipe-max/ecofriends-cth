@@ -32,6 +32,7 @@
     app.innerHTML='<div class="card"><h2>Jornada de votación</h2><p class="hint">Abre un salón, espera a que todos terminen, revisa el total y ciérralo antes de pasar al siguiente.</p><div id="sync-status" role="status"></div><div class="toolbar"><button class="btn secondary" id="refresh">Actualizar</button><button class="btn danger" id="close-all">Cerrar todos</button><button class="btn" id="final-report">Generar informe final / PDF</button><button class="btn secondary" id="logout">Cerrar sesión</button></div><div id="saved-reports"></div></div><div class="card" id="groups"></div><details class="card"><summary>Consultar resultados por candidato</summary><div id="live-results"></div></details>';
     ['Preescolar','Primaria','Bachillerato'].forEach(section=>{
       const block=document.createElement('section');block.innerHTML='<h2 class="section-title">'+esc(section)+'</h2>';
+      const grid=document.createElement('div');grid.className='admin-groups-grid';block.appendChild(grid);
       snapshot.groups.filter(g=>g.seccion===section).forEach(g=>{
         const row=document.createElement('div');row.className='admin-group';row.dataset.group=g.grupo;
         row.innerHTML='<div><h3>'+esc(g.grupo)+'</h3><div class="g-status"></div><p class="participation"></p><form class="expected-form"><label>Estudiantes que votarán <input type="number" min="0" max="500" step="1" aria-label="Estudiantes esperados de '+esc(g.grupo)+'" placeholder="Sin definir"></label><button>Guardar cantidad</button></form></div><div class="group-buttons"><button class="btn group-control"></button><button class="btn danger group-reset" type="button">Reiniciar votos</button></div>';
@@ -55,7 +56,7 @@
           if(!window.confirm('Confirma otra vez: se eliminarán permanentemente '+current.total+' votos de '+g.grupo+'.'))return;
           action(async()=>{const deleted=await rpc('ecofriends_admin_reset_group',{p_grupo:g.grupo});toast(g.grupo+': '+deleted+' votos eliminados. Salón reiniciado y cerrado.');});
         });
-        block.appendChild(row);
+        grid.appendChild(row);
       });document.getElementById('groups').appendChild(block);
     });
     document.getElementById('refresh').onclick=()=>refresh();
