@@ -79,8 +79,7 @@
         });
         row.querySelector('.group-reset').addEventListener('click',async()=>{
           const current=snapshot.groups.find(item=>item.grupo===g.grupo);
-          if(!await confirmDialog('¿Borrar los '+current.total+' votos de '+g.grupo+' y dejarlo en cero? Esta acción no se puede deshacer.',{danger:true,confirmLabel:'Borrar votos'}))return;
-          if(!await confirmDialog('Confirma otra vez: se eliminarán permanentemente '+current.total+' votos de '+g.grupo+'.',{danger:true,confirmLabel:'Sí, eliminar'}))return;
+          if(!await confirmDialog('¿Borrar permanentemente los '+current.total+' votos de '+g.grupo+' y dejarlo en cero? Esta acción no se puede deshacer.',{danger:true,confirmLabel:'Borrar votos'}))return;
           action(async()=>{const deleted=await rpc('ecofriends_admin_reset_group',{p_grupo:g.grupo});toast(g.grupo+': '+deleted+' votos eliminados. Salón reiniciado y cerrado.');});
         });
         grid.appendChild(row);
