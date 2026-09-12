@@ -74,7 +74,7 @@
           var groupInfo = state.groups.find(function(item){ return item.grupo === g; });
           var count = Number(groupInfo && groupInfo.total || 0);
           html += '<button class="group-card" data-section="' + s.id + '" data-group="' + esc(g) + '">' +
-            '<span class="g">' + esc(g) + '</span><span class="c">' + count + (count===1?' voto recibido':' votos recibidos') + '</span></button>';
+            '<span class="g">' + esc(g) + '</span><span class="c">' + count + (count===1?' voto':' votos') + '</span></button>';
         }
       });
       html += '</div></div>';
