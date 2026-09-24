@@ -113,9 +113,7 @@
     app.innerHTML = html;
     bindCrumbs();
     app.querySelectorAll('.candidate-btn').forEach(function(btn){
-      btn.addEventListener('click', function(){
-        openConfirm(btn.getAttribute('data-id'), btn.getAttribute('data-name'));
-      });
+      btn.addEventListener('click', function(){ voteFor(btn); });
     });
   }
 
@@ -153,11 +151,12 @@
     if(!state.loaded) return load();
     state.view=(!forceHome && state.gruposAbiertos[state.group])?'ballot':'home';render();
   }
-  function showSaved(){
+  function showSaved(celebrate){
     closeModal();state.view='success';
     app.innerHTML='<div class="thanks"><div class="big-check">✓</div><h2 id="vote-success-title" tabindex="-1">¡Voto registrado!</h2><p>Gracias por participar. Tu voto ya quedó guardado.<br>Pulsa Aceptar cuando sea el turno del siguiente estudiante.</p><button type="button" class="btn-confirm btn-next-vote" id="next-vote">Aceptar y continuar con el siguiente voto</button></div>';
     document.getElementById('vote-success-title').focus();
     document.getElementById('next-vote').addEventListener('click',()=>withVoteLock(continueAfterVote));
+    if(celebrate) celebrateVote();
   }
   async function withVoteLock(action){
     if(state.sending) return;
@@ -166,7 +165,7 @@
       await navigator.locks.request('ecofriends-vote',{ifAvailable:true},async lock=>{
         if(!lock){notice('Hay un voto en proceso en otra pestaña. Continúa en esa pestaña.');return;}
         state.sending=true;
-        document.querySelectorAll('.confirm-box button, #retry-vote, #next-vote').forEach(button=>button.disabled=true);
+        document.querySelectorAll('.candidate-btn, #retry-vote, #next-vote').forEach(button=>button.disabled=true);
         try{await action();}finally{state.sending=false;}
       });
     }catch(error){fatal();}
@@ -180,41 +179,62 @@
       result=await api.rpc('ecofriends_cast_vote',{p_request_id:vote.id,p_candidato_id:vote.candidate,p_dispositivo_id:vote.device});
     }catch(error){showPending();return;}
     if(result.status==='saved' && result.id===vote.id){
-      vote.status='saved';storePending(vote);notice('');showSaved();
+      vote.status='saved';storePending(vote);notice('');showSaved(true);
     }else if(result.status==='closed' || result.status==='invalid'){
       localStorage.removeItem(PENDING_KEY);closeModal();
       await syncGroups();state.view='home';render();
       notice(result.status==='closed'?'El salón fue cerrado. Este voto no se registró; avisa al responsable.':'El candidato ya no está disponible. Este voto no se registró; avisa al responsable.');
     }else{fatal();}
   }
-  function openConfirm(candidatoId,nombre){
-    if(state.sending || modal || !state.gruposAbiertos[state.group]) return;
+  function voteFor(btn){
+    const candidatoId=btn.getAttribute('data-id');
+    if(state.sending || !state.gruposAbiertos[state.group]) return;
     try {
       const pending=readPending();if(pending) return pending.status==='saved'?showSaved():showPending();
     }catch(error){fatal();return;}
-    const candidate=state.allCandidates.find(c=>String(c.id)===String(candidatoId));
-    if(!candidate) return;
-    modal=document.createElement('div');modal.className='confirm-overlay';
-    modal.setAttribute('role','dialog');modal.setAttribute('aria-modal','true');modal.setAttribute('aria-labelledby','confirm-title');
-    modal.innerHTML='<div class="confirm-box">'+avatar(candidate)+'<h3 id="confirm-title">¿Votar por '+esc(nombre)+'?</h3><p>Este voto no se puede cambiar después.</p><div class="confirm-actions"><button class="btn-cancel" id="cancel-vote">Cancelar</button><button class="btn-confirm" id="confirm-vote">Confirmar</button></div></div>';
-    document.body.appendChild(modal);
-    modal.querySelector('#cancel-vote').addEventListener('click',()=>{if(!state.sending) closeModal();});
-    modal.addEventListener('click',event=>{if(event.target===modal && !state.sending) closeModal();});
-    modal.addEventListener('keydown',event=>{
-      if(event.key==='Escape' && !state.sending) closeModal();
-      if(event.key==='Tab'){
-        const buttons=[...modal.querySelectorAll('button:not(:disabled)')];
-        if(!buttons.length){event.preventDefault();return;}
-        if(event.shiftKey && document.activeElement===buttons[0]){event.preventDefault();buttons[buttons.length-1].focus();}
-        else if(!event.shiftKey && document.activeElement===buttons[buttons.length-1]){event.preventDefault();buttons[0].focus();}
-      }
-    });
-    modal.querySelector('#cancel-vote').focus();
-    modal.querySelector('#confirm-vote').addEventListener('click',()=>withVoteLock(async()=>{
+    if(!state.allCandidates.some(c=>String(c.id)===String(candidatoId))) return;
+    withVoteLock(async()=>{
       if(!readPending()) storePending({id:crypto.randomUUID(),candidate:Number(candidatoId),device:deviceId(),group:state.group,status:'pending'});
-      if(modal) modal.querySelector('#confirm-vote').textContent='Guardando…';
+      btn.classList.add('saving');
+      const name=btn.querySelector('.cand-name');if(name) name.textContent='Guardando…';
       await sendPending();
-    }));
+    });
+  }
+  function celebrateVote(){
+    if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    const layer=document.createElement('div');
+    layer.className='vote-celebration';layer.setAttribute('aria-hidden','true');
+    const colors=['#3d7c47','#6fbf73','#f5c542','#f28c38','#ffffff','#56c9ff'];
+    const pieces=document.createDocumentFragment();
+    for(let i=0;i<100;i++){
+      const piece=document.createElement('span');
+      const isStreamer=i%5===0;
+      piece.className='celebration-piece'+(isStreamer?' streamer':'');
+      if(isStreamer){
+        piece.innerHTML='<svg viewBox="0 0 28 90" aria-hidden="true" focusable="false"><path d="M14 3 C-4 14 32 23 14 34 S-4 54 14 64 S32 80 14 87" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/><path d="M14 3 C-4 14 32 23 14 34 S-4 54 14 64 S32 80 14 87" fill="none" stroke="white" stroke-opacity=".3" stroke-width="1.2" stroke-linecap="round"/></svg>';
+      }
+      const side=i%2===0?1:-1;
+      const spread=side*(12+Math.random()*58);
+      const spin=side*(isStreamer?35+Math.random()*75:180+Math.random()*540);
+      const properties={
+        '--origin':side===1?'15%':'85%',
+        '--piece-color':colors[i%colors.length],
+        '--burst-x':spread+'vw',
+        '--burst-y':(-35-Math.random()*45)+'vh',
+        '--fall-x':(spread+side*10)+'vw',
+        '--spin':spin+'deg',
+        '--end-spin':(spin*(isStreamer?1.5:3))+'deg',
+        '--flutter-duration':(.65+Math.random()*.55)+'s',
+        '--flutter-delay':(-Math.random())+'s',
+        '--duration':(2.8+Math.random()*1.4)+'s',
+        '--delay':(Math.random()*.35)+'s',
+      };
+      for(const [name,value] of Object.entries(properties)) piece.style.setProperty(name,value);
+      pieces.appendChild(piece);
+    }
+    layer.appendChild(pieces);
+    document.body.appendChild(layer);
+    setTimeout(()=>layer.remove(),4700);
   }
   async function syncGroups(){
     if(syncing) return;

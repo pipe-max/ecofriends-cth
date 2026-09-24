@@ -50,23 +50,23 @@ async function route(request){
  const browser=await chromium.launch({headless:true,...(process.env.CHROME_BIN?{executablePath:process.env.CHROME_BIN}:{})});const errors=[];
  async function create(){const context=await browser.newContext({viewport:{width:1365,height:900}});await context.route('**/rest/v1/**',route);await context.route('https://fonts.**/**',r=>r.abort());const page=await context.newPage();page.on('pageerror',e=>errors.push(e.message));await page.goto(base);await page.locator('[data-group="6° Bet"]').waitFor();return {context,page};}
  async function choose(page){await page.locator('[data-group="6° Bet"]').click();await page.locator('.candidate-btn[data-id="1"]').click();}
+ async function openBallot(page){await page.locator('[data-group="6° Bet"]').click();await page.locator('.candidate-btn[data-id="1"]').waitFor();}
  try{
- const {context,page}=await create();await choose(page);delay=900;
- await page.getByRole('button',{name:'Confirmar',exact:true}).dblclick();
- await page.waitForFunction(()=>document.getElementById('confirm-vote')?.disabled);
- assert.equal(await page.getByRole('button',{name:'Cancelar',exact:true}).isDisabled(),true);
- await page.keyboard.press('Escape');assert.equal(await page.locator('.confirm-overlay').count(),1);
+ const {context,page}=await create();await openBallot(page);delay=900;
+ await page.locator('.candidate-btn[data-id="1"]').dblclick();
+ await page.waitForFunction(()=>document.querySelector('.candidate-btn[data-id="1"]')?.disabled);
+ assert.equal(await page.locator('.confirm-overlay').count(),0);
  await page.locator('#next-vote').waitFor();assert.equal(votes.size,1);assert.equal(writeCalls,1);delay=0;
  await page.reload();await page.locator('#next-vote').waitFor();assert.equal(await page.locator('.candidate-btn').count(),0);
- console.log('PASS: double click, in-flight cancel/Escape blocked, success survives reload.');
- await page.locator('#next-vote').click();await page.locator('.candidate-btn[data-id="1"]').click();dropReply=true;
- await page.locator('#confirm-vote').click();await page.locator('#retry-vote').waitFor();assert.equal(votes.size,2);
+ console.log('PASS: one click votes directly, double click saves once, success survives reload.');
+ await page.locator('#next-vote').click();await page.locator('.candidate-btn[data-id="1"]').waitFor();dropReply=true;
+ await page.locator('.candidate-btn[data-id="1"]').click();await page.locator('#retry-vote').waitFor();assert.equal(votes.size,2);
  await page.reload();await page.locator('#retry-vote').waitFor();await page.locator('#retry-vote').click();await page.locator('#next-vote').waitFor();assert.equal(votes.size,2);
  console.log('PASS: lost response and reload retry preserve one vote; next student uses same device.');
  const sibling=await context.newPage();await sibling.goto(base);await sibling.locator('#next-vote').waitFor();
  await page.locator('#next-vote').click();await sibling.locator('[data-group="6° Bet"]').waitFor();
- await page.locator('.candidate-btn[data-id="1"]').click();await sibling.locator('[data-group="6° Bet"]').click();await sibling.locator('.candidate-btn[data-id="1"]').click();delay=700;
- await Promise.all([page.evaluate(()=>document.getElementById('confirm-vote')?.click()),sibling.evaluate(()=>document.getElementById('confirm-vote')?.click())]);
+ await page.locator('.candidate-btn[data-id="1"]').waitFor();await sibling.locator('[data-group="6° Bet"]').click();await sibling.locator('.candidate-btn[data-id="1"]').waitFor();delay=700;
+ await Promise.all([page.evaluate(()=>document.querySelector('.candidate-btn[data-id="1"]')?.click()),sibling.evaluate(()=>document.querySelector('.candidate-btn[data-id="1"]')?.click())]);
  await page.locator('#next-vote').waitFor();await sibling.locator('#next-vote').waitFor();assert.equal(votes.size,3);delay=0;await sibling.close();
  console.log('PASS: two tabs share a vote lock and do not create duplicate submissions.');
  await page.locator('#next-vote').click();groups[0].voting_open=false;groups[0].completed_at=new Date().toISOString();groups[1].voting_open=true;
@@ -74,8 +74,8 @@ async function route(request){
  console.log('PASS: administrator group change reaches an already-open voter screen.');
  groups[0].voting_open=true;groups[1].voting_open=false;votes.clear();writeCalls=0;
  const clients=await Promise.all(Array.from({length:20},()=>create()));
- await Promise.all(clients.map(async({page})=>{await choose(page);await page.locator('#confirm-vote').click();await page.locator('#next-vote').waitFor();}));assert.equal(votes.size,20);
- await Promise.all(clients.map(async({page})=>{await page.locator('#next-vote').click();await page.locator('.candidate-btn[data-id="1"]').click();await page.locator('#confirm-vote').click();await page.locator('#next-vote').waitFor();}));assert.equal(votes.size,40);
+ await Promise.all(clients.map(async({page})=>{await choose(page);await page.locator('#next-vote').waitFor();}));assert.equal(votes.size,20);
+ await Promise.all(clients.map(async({page})=>{await page.locator('#next-vote').click();await page.locator('.candidate-btn[data-id="1"]').click();await page.locator('#next-vote').waitFor();}));assert.equal(votes.size,40);
  await Promise.all(clients.map(c=>c.context.close()));
  console.log('PASS: 20 isolated browser contexts, two students per device, 40 simulated votes.');
  const admin=await context.newPage();admin.on('pageerror',e=>errors.push(e.message));await admin.goto(base+'/admin.html');await admin.locator('#code-input').fill('test-admin');await admin.locator('#enter-btn').click();await admin.locator('#groups').waitFor();
