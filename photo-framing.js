@@ -28,6 +28,7 @@
     "https://qnikgvtjjzxsjcbquazd.supabase.co/storage/v1/object/public/ecofriends-fotos/11.png": {"x": 0.10056, "y": -0.015496, "size": 0.894401},
     // Jose María Mejía
     "https://qnikgvtjjzxsjcbquazd.supabase.co/storage/v1/object/public/ecofriends-fotos/12.png": {"x": 0.113337, "y": 0.279119, "size": 0.704753},
+    "https://ecofriends-cth.pages.dev/fotos/12-v2.png": {"x": 0.0, "y": 0.0, "size": 1.0},
     // María Guillén
     "https://qnikgvtjjzxsjcbquazd.supabase.co/storage/v1/object/public/ecofriends-fotos/13.png": {"x": -0.086793, "y": 0.007868, "size": 1.059716},
     // Salvador Arbeláez
