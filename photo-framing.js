@@ -37,8 +37,9 @@
     "https://qnikgvtjjzxsjcbquazd.supabase.co/storage/v1/object/public/ecofriends-fotos/15.png": {"x": -0.038841, "y": 0.196826, "size": 1.014839},
     // Amalia Arango
     "https://qnikgvtjjzxsjcbquazd.supabase.co/storage/v1/object/public/ecofriends-fotos/16.png": {"x": 0.073914, "y": 0.080704, "size": 0.909697},
-    // Pascual Arango
+    // Pascual Uribe
     "https://qnikgvtjjzxsjcbquazd.supabase.co/storage/v1/object/public/ecofriends-fotos/17.png": {"x": -0.062802, "y": -0.006576, "size": 1.089087},
+    "https://ecofriends-cth.pages.dev/fotos/17-v2.png": {"x": 0.0, "y": 0.0, "size": 1.0},
     // Gabriela Soto
     "https://qnikgvtjjzxsjcbquazd.supabase.co/storage/v1/object/public/ecofriends-fotos/18.png": {"x": -0.001341, "y": 0.010041, "size": 1.065565},
     // Salvador Moreno
